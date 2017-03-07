@@ -1,6 +1,18 @@
 [package]
+authors = ["cloudcalvin <cloudcalvin@me.com>"]
 name = "vpr2bitstream-rs"
 version = "0.1.0"
-authors = ["cloudcalvin <cloudcalvin@me.com>"]
 
 [dependencies]
+derive_builder = "0.3.0"
+error-chain = "*"
+regex = "*"
+lazy_static = "0.2.2"
+
+
+[dependencies.nom]
+version = "^2.1"
+features = ["regexp"]
+
+[dependencies.nalgebra]
+version = "0.11"
