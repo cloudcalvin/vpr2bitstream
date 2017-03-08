@@ -1,0 +1,109 @@
+# Benchmark "radd8" written by ABC on Mon Mar  6 17:21:14 2017
+.model radd8
+.inputs a[0] a[1] a[2] a[3] a[4] a[5] a[6] a[7] b[0] b[1] b[2] b[3] b[4] \
+ b[5] b[6] b[7] cin
+.outputs sum[0] sum[1] sum[2] sum[3] sum[4] sum[5] sum[6] sum[7] cout
+.names a[1] b[1] n29 sum[1]
+000 1
+011 1
+101 1
+110 1
+.names a[0] b[0] cin n29
+00- 1
+0-0 1
+-00 1
+.names a[2] b[2] n31 sum[2]
+000 1
+011 1
+101 1
+110 1
+.names a[1] b[1] n29 n31
+00- 1
+0-1 1
+-01 1
+.names a[3] b[3] n33 sum[3]
+000 1
+011 1
+101 1
+110 1
+.names a[2] b[2] n31 n33
+00- 1
+0-1 1
+-01 1
+.names a[4] b[4] n35 sum[4]
+001 1
+010 1
+100 1
+111 1
+.names n36 n37 n38 n35
+10- 1
+-00 1
+.names a[2] b[2] n31 n36
+010 1
+100 1
+.names a[3] b[3] n37
+00 1
+.names a[2] b[2] n39 n38
+0-0 1
+-00 1
+.names a[3] b[3] n39
+11 1
+.names n35 n41 n43 sum[5]
+0-0 1
+-00 1
+.names a[4] b[4] n42 n41
+011 1
+101 1
+.names a[5] b[5] n42
+01 1
+10 1
+.names n44 n45 n42 n43
+000 1
+101 1
+.names a[4] b[4] n44
+11 1
+.names a[4] b[4] n35 n45
+011 1
+101 1
+.names a[6] n35 n41 n47
+011 1
+101 1
+.names n42 n49 n50 n48
+0-0 1
+10- 1
+.names a[4] a[6] b[4] n49
+010 0
+101 0
+.names a[5] a[6] n50
+00 1
+11 1
+.names a[7] b[7] n52 sum[7]
+000 1
+011 1
+101 1
+110 1
+.names a[6] b[6] n53 n52
+00- 1
+0-1 1
+-01 1
+.names n35 n41 n54 n53
+0-1 1
+-01 1
+.names a[5] b[5] n44 n54
+00- 1
+0-0 1
+-00 1
+.names a[0] b[0] cin sum[0]
+001 1
+010 1
+100 1
+111 1
+.names b[6] n47 n48 sum[6]
+01- 1
+0-1 1
+100 1
+.names a[7] b[7] n52 cout
+11- 1
+1-0 1
+-10 1
+.end

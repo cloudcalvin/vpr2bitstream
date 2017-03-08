@@ -1,0 +1,576 @@
+
+/home/userd/Workspace/git-local-repos/vtr-with-yosys.compiled/vtr_flow/../vpr/vpr K3.xml add8r_yosys --blif_file add8r_yosys.pre-vpr.blif --timing_analysis off --timing_driven_clustering off --cluster_seed_type max_inputs --sdc_file "" --seed 1 --allow_unrelated_clustering on --full_stats
+
+VPR FPGA Placement and Routing.
+Version: Version 7.0.7
+Compiled: Aug 12 2016.
+University of Toronto
+vpr@eecg.utoronto.ca
+This is free open source code under MIT license.
+
+Architecture file: K3.xml
+Circuit name: add8r_yosys.blif
+
+Building complex block graph.
+WARNING(1): io[0].clock[0] unconnected pin in architecture.
+Loop for doall = 0, init_parse took 4e-06 seconds.
+Loop for doall = 0 took 0.000171 seconds.
+Loop for doall = 1, init_parse took 0.004156 seconds.
+Loop for doall = 1 took 0.000102 seconds.
+Swept away 0 nets with no fanout.
+Removed 0 LUT buffers.
+BLIF circuit stats:
+	0 LUTs of size 0
+	0 LUTs of size 1
+	5 LUTs of size 2
+	24 LUTs of size 3
+	17 of type input
+	9 of type output
+	0 of type latch
+	29 of type names
+Timing analysis: OFF
+Circuit netlist file: add8r_yosys.net
+Circuit placement file: add8r_yosys.place
+Circuit routing file: add8r_yosys.route
+Circuit SDC file: (null)
+Operation: RUN_FLOW
+
+Packer: ENABLED
+Placer: ENABLED
+Router: ENABLED
+PackerOpts.allow_early_exit: FALSE
+PackerOpts.allow_unrelated_clustering: TRUE
+PackerOpts.alpha_clustering: 0.750000
+PackerOpts.aspect: 1.000000
+PackerOpts.beta_clustering: 0.900000
+PackerOpts.block_delay: 0.000000
+PackerOpts.cluster_seed_type: MAX_INPUTS
+PackerOpts.connection_driven: TRUE
+PackerOpts.global_clocks: TRUE
+PackerOpts.hill_climbing_flag: FALSE
+PackerOpts.inter_cluster_net_delay: 1.000000
+PackerOpts.intra_cluster_net_delay: 0.000000
+PackerOpts.recompute_timing_after: 32767
+PackerOpts.sweep_hanging_nets_and_inputs: TRUE
+PackerOpts.timing_driven: FALSE
+
+PlacerOpts.place_freq: PLACE_ONCE
+PlacerOpts.place_algorithm: BOUNDING_BOX_PLACE
+PlacerOpts.pad_loc_type: FREE
+PlacerOpts.place_cost_exp: 1.000000
+PlaceOpts.seed: 1
+AnnealSched.type: AUTO_SCHED
+AnnealSched.inner_num: 1.000000
+
+RouterOpts.route_type: DETAILED
+RouterOpts.router_algorithm: NO_TIMING
+RouterOpts.base_cost_type: DEMAND_ONLY
+RouterOpts.fixed_channel_width: NO_FIXED_CHANNEL_WIDTH
+RouterOpts.trim_empty_chan: FALSE
+RouterOpts.trim_obs_chan: FALSE
+RouterOpts.acc_fac: 1.000000
+RouterOpts.bb_factor: 3
+RouterOpts.bend_cost: 0.000000
+RouterOpts.first_iter_pres_fac: 10000.000000
+RouterOpts.initial_pres_fac: 10000.000000
+RouterOpts.pres_fac_mult: 1.300000
+RouterOpts.max_router_iterations: 50
+RouterOpts.routing_failure_predictor = SAFE
+
+RoutingArch.directionality: UNI_DIRECTIONAL
+RoutingArch.switch_block_type: WILTON
+RoutingArch.Fs: 3
+
+Initialize packing.
+Begin packing 'add8r_yosys.pre-vpr.blif'.
+
+After removing unused inputs...
+	total blocks: 55, total nets: 46, total inputs: 17, total outputs: 9
+Begin prepacking.
+Finish prepacking.
+Using inter-cluster delay: -1
+Not enough resources expand FPGA size to x = 2 y = 2.
+Complex block 0: cb.sum[1], type: clb
+	
+Passed route at end.
+Complex block 1: cb.n29, type: clb
+	
+Passed route at end.
+Complex block 2: cb.sum[2], type: clb
+	
+Passed route at end.
+Complex block 3: cb.n31, type: clb
+	
+Passed route at end.
+Not enough resources expand FPGA size to x = 3 y = 3.
+Complex block 4: cb.sum[3], type: clb
+	
+Passed route at end.
+Complex block 5: cb.n33, type: clb
+	
+Passed route at end.
+Complex block 6: cb.sum[4], type: clb
+	
+Passed route at end.
+Complex block 7: cb.n35, type: clb
+	
+Passed route at end.
+Complex block 8: cb.n36, type: clb
+	
+Passed route at end.
+Not enough resources expand FPGA size to x = 4 y = 4.
+Complex block 9: cb.n38, type: clb
+	
+Passed route at end.
+Complex block 10: cb.sum[5], type: clb
+	
+Passed route at end.
+Complex block 11: cb.n41, type: clb
+	
+Passed route at end.
+Complex block 12: cb.n43, type: clb
+	
+Passed route at end.
+Complex block 13: cb.n45, type: clb
+	
+Passed route at end.
+Complex block 14: cb.n47, type: clb
+	
+Passed route at end.
+Complex block 15: cb.n48, type: clb
+	
+Passed route at end.
+Not enough resources expand FPGA size to x = 5 y = 5.
+Complex block 16: cb.n49, type: clb
+	
+Passed route at end.
+Complex block 17: cb.sum[7], type: clb
+	
+Passed route at end.
+Complex block 18: cb.n52, type: clb
+	
+Passed route at end.
+Complex block 19: cb.n53, type: clb
+	
+Passed route at end.
+Complex block 20: cb.n54, type: clb
+	
+Passed route at end.
+Complex block 21: cb.sum[0], type: clb
+	
+Passed route at end.
+Complex block 22: cb.sum[6], type: clb
+	
+Passed route at end.
+Complex block 23: cb.cout, type: clb
+	
+Passed route at end.
+Complex block 24: cb.n37, type: clb
+	
+Passed route at end.
+Not enough resources expand FPGA size to x = 6 y = 6.
+Complex block 25: cb.n39, type: clb
+	
+Passed route at end.
+Complex block 26: cb.n42, type: clb
+	
+Passed route at end.
+Complex block 27: cb.n44, type: clb
+	
+Passed route at end.
+Complex block 28: cb.n50, type: clb
+	
+Passed route at end.
+Complex block 29: cb.out:sum[0], type: io
+	
+Passed route at end.
+Complex block 30: cb.out:sum[1], type: io
+	
+Passed route at end.
+Complex block 31: cb.out:sum[2], type: io
+	
+Passed route at end.
+Complex block 32: cb.out:sum[3], type: io
+	
+Passed route at end.
+Complex block 33: cb.out:sum[4], type: io
+	
+Passed route at end.
+Complex block 34: cb.out:sum[5], type: io
+	
+Passed route at end.
+Complex block 35: cb.out:sum[6], type: io
+	
+Passed route at end.
+Complex block 36: cb.out:sum[7], type: io
+	
+Passed route at end.
+Complex block 37: cb.out:cout, type: io
+	
+Passed route at end.
+Complex block 38: cb.a[0], type: io
+	
+Passed route at end.
+Complex block 39: cb.a[1], type: io
+	
+Passed route at end.
+Complex block 40: cb.a[2], type: io
+	
+Passed route at end.
+Complex block 41: cb.a[3], type: io
+	
+Passed route at end.
+Complex block 42: cb.a[4], type: io
+	
+Passed route at end.
+Complex block 43: cb.a[5], type: io
+	
+Passed route at end.
+Complex block 44: cb.a[6], type: io
+	
+Passed route at end.
+Complex block 45: cb.a[7], type: io
+	
+Passed route at end.
+Complex block 46: cb.b[0], type: io
+	
+Passed route at end.
+Complex block 47: cb.b[1], type: io
+	
+Passed route at end.
+Complex block 48: cb.b[2], type: io
+	
+Passed route at end.
+Complex block 49: cb.b[3], type: io
+	
+Passed route at end.
+Complex block 50: cb.b[4], type: io
+	
+Passed route at end.
+Complex block 51: cb.b[5], type: io
+	
+Passed route at end.
+Complex block 52: cb.b[6], type: io
+	
+Passed route at end.
+Not enough resources expand FPGA size to x = 7 y = 7.
+Complex block 53: cb.b[7], type: io
+	
+Passed route at end.
+Complex block 54: cb.cin, type: io
+	
+Passed route at end.
+	<EMPTY>: # blocks: 0, average # input + clock pins used: 0, average # output pins used: 0
+	io: # blocks: 26, average # input + clock pins used: 0.346154, average # output pins used: 0.653846
+	clb: # blocks: 29, average # input + clock pins used: 2.82759, average # output pins used: 1
+Absorbed logical nets 0 out of 46 nets, 46 nets not absorbed.
+Old intra lb router took 0.000148 seconds.
+New intra lb router took 0 seconds.
+
+Netlist conversion complete.
+
+Packing took 0.009947 seconds.
+Packing completed.
+Begin parsing packed FPGA netlist file.
+Finished parsing packed FPGA netlist file.
+Netlist generated from file 'add8r_yosys.net'.
+
+Netlist num_nets: 46
+Netlist num_blocks: 55
+Netlist <EMPTY> blocks: 0.
+Netlist clb blocks: 29.
+Netlist inputs pins: 17
+Netlist output pins: 9
+
+Auto-sizing FPGA at x = 7 y = 7
+Auto-sizing FPGA at x = 4 y = 4
+Auto-sizing FPGA at x = 5 y = 5
+Auto-sizing FPGA at x = 6 y = 6
+Auto-sizing FPGA at x = 6 y = 6
+FPGA auto-sized to x = 7 y = 7
+The circuit will be mapped into a 7 x 7 array of clbs.
+
+Resource usage...
+	Netlist      0	blocks of type: <EMPTY>
+	Architecture 4	blocks of type: <EMPTY>
+	Netlist      26	blocks of type: io
+	Architecture 28	blocks of type: io
+	Netlist      29	blocks of type: clb
+	Architecture 49	blocks of type: clb
+
+Initial placement cost: 4.07535 bb_cost: 4.07535 td_cost: 0 delay_cost: 0
+
+------- ------- ---------- ---------- ---------- ---------- ------- ------- ------- ------- ------ --------- ------
+      T    Cost Av BB Cost Av TD Cost Av Tot Del P to P Del   d_max Ac Rate Std Dev R limit    Exp Tot Moves  Alpha
+------- ------- ---------- ---------- ---------- ---------- ------- ------- ------- ------- ------ --------- ------
+1.24546 4.22495     4.2249 0          0          0          -1.0000  0.9952  0.1498  8.0000  0.000       209  0.500
+0.62273 4.16502     4.1650 0          0          0          -1.0000  0.9713  0.1287  8.0000  0.000       418  0.500
+0.31137 4.21709     4.2171 0          0          0          -1.0000  0.9569  0.1418  8.0000  0.000       627  0.900
+0.28023 4.07611     4.0761 0          0          0          -1.0000  0.9378  0.1766  8.0000  0.000       836  0.900
+0.25221 4.18435     4.1843 0          0          0          -1.0000  0.9091  0.1680  8.0000  0.000      1045  0.900
+0.22699 4.16664     4.1666 0          0          0          -1.0000  0.9282  0.0896  8.0000  0.000      1254  0.900
+0.20429 4.17928     4.1793 0          0          0          -1.0000  0.9282  0.1501  8.0000  0.000      1463  0.900
+0.18386 4.04216     4.0422 0          0          0          -1.0000  0.8947  0.1951  8.0000  0.000      1672  0.900
+0.16547 4.11106     4.1111 0          0          0          -1.0000  0.9330  0.1432  8.0000  0.000      1881  0.900
+0.14893 3.90687     3.9069 0          0          0          -1.0000  0.8947  0.1570  8.0000  0.000      2090  0.900
+0.13403 4.04340     4.0434 0          0          0          -1.0000  0.8804  0.1241  8.0000  0.000      2299  0.900
+0.12063 3.92387     3.9239 0          0          0          -1.0000  0.7847  0.1779  8.0000  0.000      2508  0.950
+0.11460 3.93701     3.9370 0          0          0          -1.0000  0.7847  0.1110  8.0000  0.000      2717  0.950
+0.10887 3.91654     3.9165 0          0          0          -1.0000  0.8517  0.1393  8.0000  0.000      2926  0.900
+0.09798 3.87024     3.8702 0          0          0          -1.0000  0.8086  0.1210  8.0000  0.000      3135  0.900
+0.08818 4.00965     4.0097 0          0          0          -1.0000  0.7656  0.1608  8.0000  0.000      3344  0.950
+0.08377 3.97561     3.9756 0          0          0          -1.0000  0.8134  0.1129  8.0000  0.000      3553  0.900
+0.07540 3.78055     3.7806 0          0          0          -1.0000  0.6699  0.1454  8.0000  0.000      3762  0.950
+0.07163 3.76625     3.7662 0          0          0          -1.0000  0.7129  0.1815  8.0000  0.000      3971  0.950
+0.06805 3.88513     3.8851 0          0          0          -1.0000  0.7033  0.1966  8.0000  0.000      4180  0.950
+0.06464 3.77882     3.7788 0          0          0          -1.0000  0.7225  0.1997  8.0000  0.000      4389  0.950
+0.06141 3.67840     3.6784 0          0          0          -1.0000  0.6555  0.1287  8.0000  0.000      4598  0.950
+0.05834 3.61939     3.6194 0          0          0          -1.0000  0.6411  0.1208  8.0000  0.000      4807  0.950
+0.05542 3.73088     3.7309 0          0          0          -1.0000  0.6651  0.0854  8.0000  0.000      5016  0.950
+0.05265 3.66887     3.6689 0          0          0          -1.0000  0.6316  0.1119  8.0000  0.000      5225  0.950
+0.05002 3.74723     3.7472 0          0          0          -1.0000  0.6603  0.1408  8.0000  0.000      5434  0.950
+0.04752 3.79150     3.7915 0          0          0          -1.0000  0.6507  0.1366  8.0000  0.000      5643  0.950
+0.04514 3.63734     3.6373 0          0          0          -1.0000  0.6364  0.1536  8.0000  0.000      5852  0.950
+0.04289 3.57787     3.5779 0          0          0          -1.0000  0.5359  0.1070  8.0000  0.000      6061  0.950
+0.04074 3.62857     3.6286 0          0          0          -1.0000  0.5550  0.1192  8.0000  0.000      6270  0.950
+0.03870 3.56843     3.5684 0          0          0          -1.0000  0.5455  0.0986  8.0000  0.000      6479  0.950
+0.03677 3.62896     3.6290 0          0          0          -1.0000  0.5742  0.1438  8.0000  0.000      6688  0.950
+0.03493 3.50395     3.5039 0          0          0          -1.0000  0.5933  0.0920  8.0000  0.000      6897  0.950
+0.03318 3.48243     3.4824 0          0          0          -1.0000  0.4928  0.0594  8.0000  0.000      7106  0.950
+0.03152 3.29719     3.2972 0          0          0          -1.0000  0.4402  0.0973  8.0000  0.000      7315  0.950
+0.02995 3.26564     3.2656 0          0          0          -1.0000  0.4737  0.0921  8.0000  0.000      7524  0.950
+0.02845 3.38359     3.3836 0          0          0          -1.0000  0.4737  0.0951  8.0000  0.000      7733  0.950
+0.02703 3.45581     3.4558 0          0          0          -1.0000  0.4211  0.0577  8.0000  0.000      7942  0.950
+0.02568 3.33429     3.3343 0          0          0          -1.0000  0.4163  0.0680  7.8484  0.000      8151  0.950
+0.02439 3.33991     3.3399 0          0          0          -1.0000  0.4067  0.0577  7.6622  0.000      8360  0.950
+0.02317 3.12154     3.1215 0          0          0          -1.0000  0.4067  0.0949  7.4070  0.000      8569  0.950
+0.02202 3.05205     3.0520 0          0          0          -1.0000  0.3349  0.0594  7.1603  0.000      8778  0.950
+0.02091 3.04346     3.0435 0          0          0          -1.0000  0.3732  0.0484  6.4080  0.000      8987  0.950
+0.01987 3.11579     3.1158 0          0          0          -1.0000  0.4019  0.0756  5.9800  0.000      9196  0.950
+0.01888 2.92887     2.9289 0          0          0          -1.0000  0.3541  0.0476  5.7522  0.000      9405  0.950
+0.01793 2.82488     2.8249 0          0          0          -1.0000  0.3732  0.0506  5.2579  0.000      9614  0.950
+0.01703 2.81450     2.8145 0          0          0          -1.0000  0.3397  0.0587  4.9067  0.000      9823  0.950
+0.01618 2.82593     2.8259 0          0          0          -1.0000  0.3876  0.0389  4.4146  0.000     10032  0.950
+0.01537 2.78211     2.7821 0          0          0          -1.0000  0.4115  0.1169  4.1831  0.000     10241  0.950
+0.01461 2.83963     2.8396 0          0          0          -1.0000  0.3780  0.0750  4.0638  0.000     10450  0.950
+0.01387 2.80534     2.8053 0          0          0          -1.0000  0.4402  0.0521  3.8118  0.000     10659  0.950
+0.01318 2.82229     2.8223 0          0          0          -1.0000  0.4067  0.0208  3.8126  0.000     10868  0.950
+0.01252 2.72869     2.7287 0          0          0          -1.0000  0.3636  0.0570  3.6856  0.000     11077  0.950
+0.01190 2.57583     2.5758 0          0          0          -1.0000  0.3062  0.0232  3.4042  0.000     11286  0.950
+0.01130 2.57492     2.5749 0          0          0          -1.0000  0.4163  0.0156  2.9488  0.000     11495  0.950
+0.01074 2.61564     2.6156 0          0          0          -1.0000  0.4737  0.0323  2.8788  0.000     11704  0.950
+0.01020 2.63958     2.6396 0          0          0          -1.0000  0.4402  0.0708  2.9757  0.000     11913  0.950
+0.00969 2.53408     2.5341 0          0          0          -1.0000  0.4258  0.0216  2.9763  0.000     12122  0.950
+0.00920 2.47952     2.4795 0          0          0          -1.0000  0.3684  0.0293  2.9342  0.000     12331  0.950
+0.00874 2.35828     2.3583 0          0          0          -1.0000  0.2967  0.0359  2.7241  0.000     12540  0.950
+0.00831 2.37350     2.3735 0          0          0          -1.0000  0.3732  0.0166  2.3336  0.000     12749  0.950
+0.00789 2.38450     2.3845 0          0          0          -1.0000  0.3206  0.0120  2.1778  0.000     12958  0.950
+0.00750 2.34238     2.3424 0          0          0          -1.0000  0.4163  0.0129  1.9177  0.000     13167  0.950
+0.00712 2.29124     2.2912 0          0          0          -1.0000  0.4593  0.0198  1.8722  0.000     13376  0.950
+0.00677 2.24850     2.2485 0          0          0          -1.0000  0.4019  0.0176  1.9084  0.000     13585  0.950
+0.00643 2.22739     2.2274 0          0          0          -1.0000  0.3254  0.0151  1.8357  0.000     13794  0.950
+0.00611 2.21285     2.2128 0          0          0          -1.0000  0.3589  0.0171  1.6252  0.000     14003  0.950
+0.00580 2.24161     2.2416 0          0          0          -1.0000  0.4019  0.0108  1.4933  0.000     14212  0.950
+0.00551 2.21815     2.2181 0          0          0          -1.0000  0.2967  0.0179  1.4365  0.000     14421  0.950
+0.00524 2.19369     2.1937 0          0          0          -1.0000  0.3589  0.0191  1.2306  0.000     14630  0.950
+0.00497 2.16023     2.1602 0          0          0          -1.0000  0.3158  0.0252  1.1307  0.000     14839  0.950
+0.00473 2.13639     2.1364 0          0          0          -1.0000  0.3014  0.0084  1.0000  0.000     15048  0.950
+0.00449 2.13711     2.1371 0          0          0          -1.0000  0.3110  0.0072  1.0000  0.000     15257  0.950
+0.00426 2.11646     2.1165 0          0          0          -1.0000  0.2871  0.0133  1.0000  0.000     15466  0.950
+0.00405 2.10739     2.1074 0          0          0          -1.0000  0.2344  0.0140  1.0000  0.000     15675  0.950
+0.00385 2.13814     2.1381 0          0          0          -1.0000  0.2727  0.0072  1.0000  0.000     15884  0.950
+0.00366 2.12333     2.1233 0          0          0          -1.0000  0.3014  0.0124  1.0000  0.000     16093  0.950
+0.00347 2.09465     2.0947 0          0          0          -1.0000  0.2201  0.0087  1.0000  0.000     16302  0.950
+0.00330 2.09064     2.0906 0          0          0          -1.0000  0.2057  0.0052  1.0000  0.000     16511  0.950
+0.00313 2.07862     2.0786 0          0          0          -1.0000  0.2201  0.0090  1.0000  0.000     16720  0.950
+0.00298 2.07429     2.0743 0          0          0          -1.0000  0.2010  0.0068  1.0000  0.000     16929  0.950
+0.00283 2.07663     2.0766 0          0          0          -1.0000  0.2297  0.0053  1.0000  0.000     17138  0.950
+0.00269 2.05524     2.0552 0          0          0          -1.0000  0.2297  0.0010  1.0000  0.000     17347  0.950
+0.00255 2.05490     2.0549 0          0          0          -1.0000  0.1722  0.0035  1.0000  0.000     17556  0.950
+0.00243 2.05422     2.0542 0          0          0          -1.0000  0.2440  0.0043  1.0000  0.000     17765  0.950
+0.00230 2.04386     2.0439 0          0          0          -1.0000  0.1675  0.0017  1.0000  0.000     17974  0.950
+0.00219 2.04598     2.0460 0          0          0          -1.0000  0.1531  0.0048  1.0000  0.000     18183  0.950
+0.00208 2.06023     2.0602 0          0          0          -1.0000  0.2919  0.0050  1.0000  0.000     18392  0.950
+0.00198 2.04859     2.0486 0          0          0          -1.0000  0.2344  0.0049  1.0000  0.000     18601  0.950
+0.00188 2.04538     2.0454 0          0          0          -1.0000  0.2010  0.0016  1.0000  0.000     18810  0.950
+0.00178 2.04198     2.0420 0          0          0          -1.0000  0.2010  0.0004  1.0000  0.000     19019  0.950
+0.00169 2.04133     2.0413 0          0          0          -1.0000  0.2584  0.0002  1.0000  0.000     19228  0.950
+0.00161 2.04145     2.0415 0          0          0          -1.0000  0.2105  0.0004  1.0000  0.000     19437  0.950
+0.00153 2.04254     2.0425 0          0          0          -1.0000  0.2536  0.0007  1.0000  0.000     19646  0.950
+0.00145 2.04210     2.0421 0          0          0          -1.0000  0.2344  0.0005  1.0000  0.000     19855  0.950
+0.00138 2.04236     2.0424 0          0          0          -1.0000  0.2488  0.0005  1.0000  0.000     20064  0.950
+0.00131 2.04487     2.0449 0          0          0          -1.0000  0.1962  0.0011  1.0000  0.000     20273  0.950
+0.00125 2.04225     2.0423 0          0          0          -1.0000  0.2010  0.0007  1.0000  0.000     20482  0.950
+0.00118 2.04233     2.0423 0          0          0          -1.0000  0.1914  0.0013  1.0000  0.000     20691  0.950
+0.00112 2.04432     2.0443 0          0          0          -1.0000  0.1722  0.0009  1.0000  0.000     20900  0.950
+0.00107 2.04231     2.0423 0          0          0          -1.0000  0.1818  0.0011  1.0000  0.000     21109  0.950
+0.00101 2.04162     2.0416 0          0          0          -1.0000  0.1866  0.0005  1.0000  0.000     21318  0.950
+0.00096 2.04212     2.0421 0          0          0          -1.0000  0.1627  0.0005  1.0000  0.000     21527  0.950
+0.00092 2.04252     2.0425 0          0          0          -1.0000  0.1388  0.0008  1.0000  0.000     21736  0.800
+0.00073 2.04227     2.0423 0          0          0          -1.0000  0.1627  0.0005  1.0000  0.000     21945  0.950
+0.00070 2.04248     2.0425 0          0          0          -1.0000  0.1722  0.0005  1.0000  0.000     22154  0.950
+0.00066 2.04216     2.0422 0          0          0          -1.0000  0.2344  0.0005  1.0000  0.000     22363  0.950
+0.00063 2.04171     2.0417 0          0          0          -1.0000  0.1914  0.0005  1.0000  0.000     22572  0.950
+0.00060 2.04115     2.0412 0          0          0          -1.0000  0.2297  0.0000  1.0000  0.000     22781  0.950
+0.00057 2.04115     2.0412 0          0          0          -1.0000  0.2010  0.0000  1.0000  0.000     22990  0.950
+0.00054 2.04115     2.0412 0          0          0          -1.0000  0.1914  0.0000  1.0000  0.000     23199  0.950
+0.00051 2.04162     2.0416 0          0          0          -1.0000  0.1962  0.0006  1.0000  0.000     23408  0.950
+0.00049 2.04213     2.0421 0          0          0          -1.0000  0.1866  0.0005  1.0000  0.000     23617  0.950
+0.00046 2.04187     2.0419 0          0          0          -1.0000  0.1866  0.0005  1.0000  0.000     23826  0.950
+0.00044 2.04233     2.0423 0          0          0          -1.0000  0.1675  0.0005  1.0000  0.000     24035  0.950
+0.00042 2.04238     2.0424 0          0          0          -1.0000  0.1675  0.0005  1.0000  0.000     24244  0.950
+0.00040 2.04245     2.0425 0          0          0          -1.0000  0.2010  0.0005  1.0000  0.000     24453  0.950
+0.00038 2.03759     2.0376 0          0          0          -1.0000  0.2679  0.0051  1.0000  0.000     24662  0.950
+0.00036 2.03198     2.0320 0          0          0          -1.0000  0.2201  0.0004  1.0000  0.000     24871  0.950
+0.00034 2.03198     2.0320 0          0          0          -1.0000  0.1962  0.0004  1.0000  0.000     25080  0.950
+0.00032 2.03198     2.0320 0          0          0          -1.0000  0.2010  0.0004  1.0000  0.000     25289  0.950
+0.00031 2.03154     2.0315 0          0          0          -1.0000  0.2153  0.0010  1.0000  0.000     25498  0.950
+0.00029 2.02982     2.0298 0          0          0          -1.0000  0.2297  0.0003  1.0000  0.000     25707  0.950
+0.00028 2.03060     2.0306 0          0          0          -1.0000  0.1722  0.0003  1.0000  0.000     25916  0.950
+0.00026 2.03074     2.0307 0          0          0          -1.0000  0.1722  0.0005  1.0000  0.000     26125  0.950
+0.00025 2.02999     2.0300 0          0          0          -1.0000  0.1866  0.0004  1.0000  0.000     26334  0.950
+0.00024 2.02977     2.0298 0          0          0          -1.0000  0.1627  0.0002  1.0000  0.000     26543  0.950
+0.00023 2.02977     2.0298 0          0          0          -1.0000  0.1627  0.0002  1.0000  0.000     26752  0.950
+0.00000 2.02977     2.0298 0          0          0                   0.1722  0.0002  1.0000  0.000     26961
+
+BB estimate of min-dist (placement) wire length: 203
+bb_cost recomputed from scratch: 2.02976
+
+Completed placement consistency check successfully.
+
+Swaps called: 27016
+Placement cost: 2.02977, bb_cost: 2.02977, td_cost: 0, delay_cost: 0
+Placement total # of swap attempts: 27016
+	Swap reject rate: 0
+	Swap accept rate: 0
+	Swap abort rate: 0
+Placement took 0.055807 seconds.
+
+Timing analysis off; using default timing constraints.
+
+Defaulting to: constrain all 0 inputs and 0 outputs on a virtual external clock.
+Optimize this virtual clock to run as fast as possible.
+
+Using low: -1, high: -1, current: 6
+Build rr_graph took 0.001097 seconds.
+Confirming router algorithm: TIMING_DRIVEN.
+Wire length after first iteration 215, total available wire length 672, ratio 0.31994
+--------- ---------- -----------
+Iteration       Time   Crit Path
+--------- ---------- -----------
+        1   0.00 sec
+Successfully routed after 1 routing iterations.
+Completed net delay value cross check successfully.
+
+Using low: -1, high: 6, current: 4
+Build rr_graph took 0.000576 seconds.
+Confirming router algorithm: TIMING_DRIVEN.
+Wire length after first iteration 232, total available wire length 448, ratio 0.517857
+--------- ---------- -----------
+Iteration       Time   Crit Path
+--------- ---------- -----------
+        1   0.00 sec
+        2   0.00 sec
+        3   0.00 sec
+        4   0.00 sec
+        5   0.00 sec
+        6   0.00 sec
+        7   0.00 sec
+        8   0.00 sec
+Successfully routed after 8 routing iterations.
+Completed net delay value cross check successfully.
+
+Using low: -1, high: 4, current: 2
+Build rr_graph took 0.000276 seconds.
+Confirming router algorithm: TIMING_DRIVEN.
+Wire length after first iteration 245, total available wire length 224, ratio 1.09375
+Wire length usage ratio exceeds limit of 0.85, fail routing.
+
+Checking to ensure routing is legal...
+Completed routing consistency check successfully.
+
+Serial number (magic cookie) for the routing is: -3486141
+Best routing used a channel width factor of 4.
+
+Average number of bends per net: 2.58696  Maximum # of bends: 10
+
+Number of routed nets (nonglobal): 46
+Wire length results (in units of 1 clb segments)...
+	Total wirelength: 249, average net length: 5.41304
+	Maximum net length: 18
+
+Wire length results in terms of physical segments...
+	Total wiring segments used: 249, average wire segments per net: 5.41304
+	Maximum segments used by a net: 18
+	Total local nets with reserved CLB opins: 0
+
+X - Directed channels: j max occ ave occ capacity
+                      -- ------- ------- --------
+                       0       4  2.2857        4
+                       1       4  2.5714        4
+                       2       3  2.1429        4
+                       3       4  2.0000        4
+                       4       4  2.7143        4
+                       5       4  2.4286        4
+                       6       3  1.4286        4
+                       7       4  2.4286        4
+Y - Directed channels: i max occ ave occ capacity
+                      -- ------- ------- --------
+                       0       3  1.5714        4
+                       1       3  1.2857        4
+                       2       3  1.5714        4
+                       3       4  2.2857        4
+                       4       4  3.2857        4
+                       5       4  2.8571        4
+                       6       4  2.1429        4
+                       7       4  2.5714        4
+
+Total tracks in x-direction: 32, in y-direction: 32
+
+Logic area (in minimum width transistor areas, excludes I/Os and empty grid tiles)...
+	Total logic block area (Warning, need to add pitch of routing to blocks with height > 3): 109237
+	Total used logic block area: 64650.3
+
+Routing area (in minimum width transistor areas)...
+	Total routing area: 17928.9, per logic tile: 365.895
+
+Segment usage by type (index): type utilization
+                               ---- -----------
+                                  0       0.556
+
+Segment usage by length: length utilization
+                         ------ -----------
+                              1       0.556
+
+
+Probability distribution of 2-pin net lengths:
+
+Length    p(Lenth)
+     0    0.000000
+     1    0.087912
+     2    0.428571
+     3    0.329670
+     4    0.065934
+     5    0.043956
+     6    0.032967
+     7    0.000000
+     8    0.000000
+     9    0.000000
+    10    0.000000
+    11    0.010989
+    12    0.000000
+    13    0.000000
+    14    0.000000
+    15    0.000000
+    16    0.000000
+    17    0.000000
+    18    0.000000
+    19    0.000000
+    20    0.000000
+    21    0.000000
+    22    0.000000
+    23    0.000000
+
+Number of 2-pin nets: ;91;
+Expected value of 2-pin net length (R): ;2.73626;
+Total wirelength: ;249;

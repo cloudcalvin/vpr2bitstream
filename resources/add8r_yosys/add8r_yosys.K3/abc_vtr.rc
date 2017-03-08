@@ -1,0 +1,8 @@
+read_lut abc_lut6.lut;
+source abc.rc;
+print_lut;
+resyn;
+resyn2;
+if;
+print_stats;
+time;

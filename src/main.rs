@@ -60,6 +60,10 @@ read file (.pre-vpr.blif)
 */
 
 mod errors;
+mod data_types;
+
+use errors::*;
+use data_types::*;
 
 #[macro_use]
 extern crate error_chain;
@@ -72,7 +76,7 @@ extern crate derive_builder;
 extern crate nalgebra as na;
 #[macro_use]
 extern crate lazy_static;
-
+extern crate regex;
 
 use na::{Vector3, Rotation3};
 use na::{Dynamic, MatrixArray, MatrixVec, DMatrix};
@@ -84,91 +88,10 @@ use std::fs::File;
 use std::io::BufReader;
 use std::io::BufRead;
 use std::path::Path;
-use std::io::Error;
+//use std::error::Error;
 use std::io;
 use std::io::prelude::*;
 
-use errors::*;
-
-
-//#[derive(clone)]
-#[derive(Default,Clone,Debug)]
-struct Port(u32);
-#[derive(Default,Clone,Debug)]
-struct Point(u32,u32);
-
-type Class = u32;
-type Pin = u32;
-
-struct Source(Point,Class,Pin);
-struct Sink(Point,Class,Pin);
-
-
-
-//Nets are populated from the .route file.
-struct Net{
-  src_loc : Source,
-  src_pin : u8,
-  route_tree : Vec<(Vec<(Point,Point)>,Sink)>, //each outer vec is a new sub source. each inner vec is a connection.
-}
-
-struct Model{
-  name: String,
-  inputs : Vec<String>,
-  outputs : Vec<String>,
-  logic : Vec<(Vec<String>, String)>,
-}
-
-/*
-  why use a builder : because the block requires both blif and placement to be fully instantiated.
-*/
-// NOTE : the blocks are stored with xy coords as received from VTR.
-#[derive(Default, Builder, Debug)]
-struct Block{ //can be ble, or pad.
-  id : u32,
-  name : String,
-  xy : (u32,u32),
-  subblk_nr : u8,
-  input : Vec<Port>, //should be size k.
-  output : Port, //can a block ever have more than one output port? maybe for AICs
- //  lut_table : HashMap<u8, bool> //assuming luts never have more than 256 inputs.
-  lut_table : Vec<bool> //index is the input to the lookup. Will need to bounds check the read+writes.
-}
-impl Block{
-  fn switch(&self, a: Port, b:  Port){
-    // rearrange the lut_table accordingly.
-  }
-}
-
-// Channels instantiated during the read from placement file and used during bitstream generation..
-struct Channel{
-  id : u32,
-  name : String,
-  xy : (u32,u32),
-  orientation : bool, //true is vertical. false is horizontal.
-}
-#[derive(Default, Builder, Debug)]
-struct Tile{
-  xy : Point,
-  sw_blk : Vec<bool>,
-  con_bkl_top : Vec<bool>,
-  con_bkl_right : Vec<bool>,
-  ble : Vec<bool>,
-}
-
-impl Tile{
-
-  fn bitstream(&self) -> Vec<bool> {
-    let mut ret = Vec::new();
-    ret.extend_from_slice(&self.ble);
-    ret.extend_from_slice(&self.con_bkl_top);
-    ret.extend_from_slice(&self.sw_blk);
-    ret.extend_from_slice(&self.con_bkl_right);
-    return ret
-  }
-
-//  fn set_
-}
 
 //struct BitStreamBuilder{
 //  tile_matrix : Vec<Vec<Tile>>,
@@ -226,120 +149,150 @@ impl Tile{
 //}
 
 
+//use errors::*;
 
 type Placement = (String, Point);
-
-fn load_placement<P: AsRef<Path>>(file_path: P) -> Result<(u32, String, String, Vec<Placement>, Vec<Vec<BlockBuilder>>)>{
-
+//fn load_placement(file_path: Path) -> Result<(u32, String, String, Vec<Placement>, Vec<Vec<BlockBuilder>>)>{
+fn load_placement<P : AsRef<Path>>(file_path: P) -> Result<(u32, String, String, Vec<Placement>, Vec<Vec<BlockBuilder>>)>{
   //Setup regex
   lazy_static! { // TODO  :make these regex look better.
       static ref PLACE_FILE_REGEX_files : Regex = Regex::new(r"Netlist file: (?P<netlist_file>.+) Architecture file: (?P<arch_file>.+)$").unwrap();
       static ref PLACE_FILE_REGEX_array_size : Regex = Regex::new(r"Array size: (?P<size>\d{[0-9]+}) x $").unwrap();
       static ref PLACE_FILE_REGEX_data_lines: Regex = Regex::new(r"(?P<name>(?-u:\b).+(?-u:\b))[[:space:]]+(?P<x>\d)[[:space:]]+(?P<y>\d)[[:space:]]+(?P<sub_blk>\d)[[:space:]]+#(?P<blk_nr>\d)$").unwrap();
+//      static ref PLACE_FILE_REGEX_data_lines: Regex = Regex::new(r"(?P<0>(?-u:\b).+(?-u:\b))[[:space:]]+(?P<1>\d)[[:space:]]+(?P<2>\d)[[:space:]]+(?P<3>\d)[[:space:]]+#(?P<4>\d)$").unwrap();
   }
-  // Init variables
-  let mut n = 0;
+  // Init variable
+  let mut n : u32 = 0;
   let mut netlist_file = String::new();
   let mut arch_file = String::new();
   let mut placement_list : Vec<Placement> = Vec::new();
   let mut blocks : Vec<Vec<BlockBuilder>> = Vec::new();//with_capacity(N); //how to make lazy?
+  let file_name =  (*file_path.as_ref()).to_str();
 
-  //Open File
+  //Read File into Buffer
   let f = try!(File::open(file_path));
   let mut file = BufReader::new(&f);
-  let line_count = file.len();
-  let (idx,lines) = file.lines().enumerate();
+  let lines_zipped = file.lines().enumerate();
+//  let lines = file.lines().collect();//ok_or::<Error>("".into()); .map_err(|e| e.into())s
+  let mut line_count : usize = 0;
+  for (i,line) in lines_zipped{
+//    lines_zipped.push((i,line.unwrap_or("error".into())));
+    line_count = i;
+  }
+//  for line in lines
 
-  //Parse Header
-  while let Some(i) = idx.next(){
-    match i {
-      0 => { // IF LINE 0 : capture file names.
-        let captured : Option<Captures> = PLACE_FILE_REGEX_files.captures(&lines.next()?); //captures, executes the regex query defined in 'util.rs'
-        match captured{
-          Some(ref cap) => {
-            netlist_file = try!(Captures::name(cap,"netlist_file")
-                .ok_or::<Error>("No Netlist file specified in .place file.".into()));
+  //  let lines_zipped : Vec<(usize,Result<String>)> = file.lines().enumerate().collect();
+//  let lines_zipped = lines.iter().enumerate();
+//  let Some(&(line_count ,last_line)) = lines_zipped.last(); //.clone();
+//  let line_count : usize = try!(lines_zipped.clone().count());
 
-            arch_file = try!(Captures::name(cap,"arch_file")
-                .ok_or::<Error>("No Architecture file specified in .place file.".into()));
-            println!("Netlist file used : {}", &netlist_file);
-            println!("Architecture file used : {}", &arch_file);
+  /////////////////////////////////////////////////////////////////////////////////////////////////
+  //Parse Header //todo: put this in a function.
+  /////////////////////////////////////////////////////////////////////////////////////////////////
+  while let Some((idx,line)) = lines_zipped.next(){
+//    let line = String::from(try!(lines.next()));
+    match idx {
+      // IF LINE 0 : capture file names.
+      0 =>
+        {
+          let captured : Option<Captures> = PLACE_FILE_REGEX_files.captures(&line?); //captures, executes the regex query defined in 'util.rs'
+          match captured{
+            Some(ref cap) => {
+              let net = try!(Captures::name(cap,"netlist_file")
+                  .ok_or("No Netlist file specified in .place file.".into()));
+
+              let arch = try!(Captures::name(cap,"arch_file")
+                  .ok_or("No Architecture file specified in .place file.".into()));
+                netlist_file = String::from(net.as_str());
+                arch_file = String::from(arch.as_str());
+              println!("Netlist file used : {}", &netlist_file);
+              println!("Architecture file used : {}", &arch_file);
+              Ok(())
+            },
+            _ => Err("Malformed .parse file".into())
           }
-          _ => Err("Malformed .parse file".into())
-        }
       },
-      1 => { // IF LINE 1 : capture lut array size.
-        let captured : Option<Captures> = PLACE_FILE_REGEX_array_size.captures(&lines.next()?); //captures, executes the regex query defined in 'util.rs'
-        match captured{
-          Some(ref cap) => {
-            netlist_file = try!(Captures::name(cap, "netlist_file")
-                .ok_or::<Error>("No Netlist file specified in .place file.".into()));
+      // IF LINE 1 : capture lut array size.
+      1 =>
+        {
+          let captured : Option<Captures> = PLACE_FILE_REGEX_array_size.captures(&line?); //captures, executes the regex query defined in 'util.rs'
+          match captured{
+            Some(ref cap) => {
+              let array_size  = try!(Captures::name(cap, "size")
+                  .ok_or::<Error>("No array size specified in .place file.".into()));
+              n = array_size.as_str().parse::<u32>()?;
+            }
+            _ => Err("Malformed .parse file".into())
           }
-          _ => Err("Malformed .parse file".into())
-        }
       },
       2 | 3 | 4 => { //skip lines 2,3 and 4.
-        lines.next()?;
+        //do nothing..
+        Ok(())
       }
       _ => { //exit when reached body.
-        lines.next()?;
         break;
       }
     }
 
   }
 
-  //Initialise block matrix.
-  for y in 0..N{
-    let y_row : Vec<BlockBuilder> = Vec::with_capacity(N);
-    for x in 0..N{
-      y_row.push(BlockBuilder::default().xy(x,y))
+  //Initialise block matrix. //todo : use ndarray.
+  for y in 0..n {
+    let y_row : Vec<BlockBuilder> = Vec::with_capacity(n as usize);
+    for x in 0..n {
+      y_row.push(BlockBuilder::default().xy(Point(x,y)))
     }
     blocks.push(y_row);
   };
-
-  //Parse Body?
-  while let Some(i) = idx.next(){
-    match i{
+  /////////////////////////////////////////////////////////////////////////////////////////////////
+  //Parse Body //todo: put this in a function. -- it is hiding the matrix initialization code.
+  /////////////////////////////////////////////////////////////////////////////////////////////////
+  while let Some((idx,line)) = lines_zipped.next(){
+    let _ = match idx{
       5...line_count => {
-        let re = regex::Regex::new(r"").unwrap();
-        for part in re.split("aabbaacaaaccaaa") {
-          println!(">{}<", part);
+        let captured : Option<Captures> = PLACE_FILE_REGEX_data_lines.captures(&line); //captures, executes the regex query defined in 'util.rs'
+        match captured{
+          Some(ref cap) => {
+            let name = try!(Captures::name(cap,"name"));
+//                .ok_or::<Error>(format!("{} (LINE: {}) : No blk name specified",&file_path,&idx).into())); //todo : revise the errors.
+
+            let xs = try!(Captures::name(cap,"x")
+                .ok_or::<Error>(format!("{} (LINE: {}) : No x coordinate specified",&file_name,&idx).into()));
+
+            let ys = try!(Captures::name(cap,"y")
+                .ok_or::<Error>(format!("{} (LINE: {}) : No y coordinate specified",&file_name,&idx).into()));
+
+            let sub_blk = try!(Captures::name(cap,"sub_blk")
+                .ok_or::<Error>(format!("{} (LINE: {}) : No subblk specified",&file_name,&idx).into()));
+
+            let blk_nr = try!(Captures::name(cap,"blk_nr")
+                .ok_or::<Error>(format!("{} (LINE: {}) : No blk_nr specified",&file_name,&idx).into()));
+
+            let (x,y) = (xs.as_str().parse::<u32>().unwrap(),ys.as_str().parse::<u32>().unwrap());
+
+            blocks[x as usize][y as usize].name(name.as_str()).sub_blk(sub_blk.as_str().parse::<u8>().unwrap());
+            placement_list.push((String::from(name.as_str()),Point(x,y)))
+          }
+          _ => break
         }
       } ,
       _ => break
-    }
-
+    };
   }
-  while idx.has_next(){
+  Ok((n,netlist_file,arch_file,placement_list,blocks))
+//  while idx.has_next(){
+//
+//  }
+//
+//  for (i,line) in lines.enumerate() {
+//
+//  }
+//  //read header (5 lines)
+//  for line in lines[0..4]{
+//    let l = line.unwrap();
+//    println!("{}", l);
+//  }
 
-  }
-
-  for (i,line) in lines.enumerate() {
-
-  }
-  //read header (5 lines)
-  for line in lines[0..4]{
-    let l = line.unwrap();
-    println!("{}", l);
-  }
-  //Initilise block matrix
-  for y in 0..N{
-    let y_row : Vec<BlockBuilder> = Vec::with_capacity(N);
-    for x in 0..N{
-      y_row.push(BlockBuilder::default().xy(x,y))
-    }
-    blocks.push(y_row);
-  };
-
-
-  for line in lines[4..]{
-    let l = line.unwrap();
-    println!("blk nr:{}", l);
-    let w = l.split(" ");
-    let (x,y) = (w[1].parse::<u32>().unwrap(),w[2].parse::<u32>().unwrap());
-    blocks[x][y].name(w[0])
-  }
 
 }
 
@@ -367,7 +320,12 @@ fn main() {
   let blif_file = name + "pre-vpr.blif";
 
 
-  let (N,net_file,arch_file,place,blocks) = load_placement(place_file);
+  match load_placement(Path::new(place_file)) {
+    Ok((N,net_file,arch_file,place,blocks)) => {
+
+    }
+    _ => println!("error")
+  }
 //  let (N,n_nets,nets) = load_routing(route_file);
 //  let (count, models) = load_blif(blif_file);
 //  let names : Vec<bool> = parse_blif(models);

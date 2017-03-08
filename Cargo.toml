@@ -6,13 +6,12 @@ version = "0.1.0"
 [dependencies]
 derive_builder = "0.3.0"
 error-chain = "*"
+lazy_static = "0.2.4"
 regex = "*"
-lazy_static = "0.2.2"
-
-
-[dependencies.nom]
-version = "^2.1"
-features = ["regexp"]
 
 [dependencies.nalgebra]
 version = "0.11"
+
+[dependencies.nom]
+features = ["regexp"]
+version = "^2.1"
