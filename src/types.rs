@@ -3,7 +3,7 @@
 #[derive(Default,Clone,Debug)]
 pub struct Port(u32);
 #[derive(Default,Clone,Debug)]
-pub struct Point(u32,u32);
+pub struct Point(pub u32,pub u32);
 
 pub type Class = u32;
 pub type Pin = u32;

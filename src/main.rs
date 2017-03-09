@@ -60,10 +60,10 @@ read file (.pre-vpr.blif)
 */
 
 mod errors;
-mod data_types;
+mod types;
 
 use errors::*;
-use data_types::*;
+use types::*;
 
 #[macro_use]
 extern crate error_chain;
@@ -155,6 +155,7 @@ type Placement = (String, Point);
 //fn load_placement(file_path: Path) -> Result<(u32, String, String, Vec<Placement>, Vec<Vec<BlockBuilder>>)>{
 fn load_placement<P : AsRef<Path>>(file_path: P) -> Result<(u32, String, String, Vec<Placement>, Vec<Vec<BlockBuilder>>)>{
   //Setup regex
+//  type P = AsRef<Path>;
   lazy_static! { // TODO  :make these regex look better.
       static ref PLACE_FILE_REGEX_files : Regex = Regex::new(r"Netlist file: (?P<netlist_file>.+) Architecture file: (?P<arch_file>.+)$").unwrap();
       static ref PLACE_FILE_REGEX_array_size : Regex = Regex::new(r"Array size: (?P<size>\d{[0-9]+}) x $").unwrap();
@@ -167,117 +168,125 @@ fn load_placement<P : AsRef<Path>>(file_path: P) -> Result<(u32, String, String,
   let mut arch_file = String::new();
   let mut placement_list : Vec<Placement> = Vec::new();
   let mut blocks : Vec<Vec<BlockBuilder>> = Vec::new();//with_capacity(N); //how to make lazy?
-  let file_name =  (*file_path.as_ref()).to_str();
+  let file_name =  (*file_path.as_ref()).to_str().unwrap();// {
 
   //Read File into Buffer
-  let f = try!(File::open(file_path));
+  let f = try!(File::open(Path::new(&file_name)));
+//  let f = try!(File::open(file_path));
   let mut file = BufReader::new(&f);
-  let lines_zipped = file.lines().enumerate();
-//  let lines = file.lines().collect();//ok_or::<Error>("".into()); .map_err(|e| e.into())s
+
+//  let lines = file.lines();
+  let mut lines_enumerated = file.lines().enumerate();
+
   let mut line_count : usize = 0;
-  for (i,line) in lines_zipped{
-//    lines_zipped.push((i,line.unwrap_or("error".into())));
+  let mut lines_zipped : Vec<(usize,String)> = Vec::new();
+
+  for (i,line) in lines_enumerated{
+    lines_zipped.push((i,String::from(line.unwrap_or("error".into()))));
     line_count = i;
   }
-//  for line in lines
 
-  //  let lines_zipped : Vec<(usize,Result<String>)> = file.lines().enumerate().collect();
-//  let lines_zipped = lines.iter().enumerate();
-//  let Some(&(line_count ,last_line)) = lines_zipped.last(); //.clone();
-//  let line_count : usize = try!(lines_zipped.clone().count());
 
   /////////////////////////////////////////////////////////////////////////////////////////////////
   //Parse Header //todo: put this in a function.
   /////////////////////////////////////////////////////////////////////////////////////////////////
-  while let Some((idx,line)) = lines_zipped.next(){
+  let mut lines_zip_iter = lines_zipped.iter();
+  while let Some(&(idx,ref line)) = lines_zip_iter.next(){
 //    let line = String::from(try!(lines.next()));
     match idx {
       // IF LINE 0 : capture file names.
       0 =>
         {
-          let captured : Option<Captures> = PLACE_FILE_REGEX_files.captures(&line?); //captures, executes the regex query defined in 'util.rs'
+          let captured : Option<Captures> = PLACE_FILE_REGEX_files.captures(line); //captures, executes the regex query defined in 'util.rs'
           match captured{
             Some(ref cap) => {
               let net = try!(Captures::name(cap,"netlist_file")
-                  .ok_or("No Netlist file specified in .place file.".into()));
+                  .ok_or::<Error>("No Netlist file specified in .place file.".into()));
 
               let arch = try!(Captures::name(cap,"arch_file")
-                  .ok_or("No Architecture file specified in .place file.".into()));
+                  .ok_or::<Error>("No Architecture file specified in .place file.".into()));
                 netlist_file = String::from(net.as_str());
                 arch_file = String::from(arch.as_str());
               println!("Netlist file used : {}", &netlist_file);
               println!("Architecture file used : {}", &arch_file);
-              Ok(())
+//              Ok(())
             },
-            _ => Err("Malformed .parse file".into())
+            _ => println!("Error parsing")//Err("Malformed .parse file".into())
           }
       },
       // IF LINE 1 : capture lut array size.
       1 =>
         {
-          let captured : Option<Captures> = PLACE_FILE_REGEX_array_size.captures(&line?); //captures, executes the regex query defined in 'util.rs'
+          let captured : Option<Captures> = PLACE_FILE_REGEX_array_size.captures(&line); //captures, executes the regex query defined in 'util.rs'
           match captured{
             Some(ref cap) => {
               let array_size  = try!(Captures::name(cap, "size")
                   .ok_or::<Error>("No array size specified in .place file.".into()));
               n = array_size.as_str().parse::<u32>()?;
-            }
-            _ => Err("Malformed .parse file".into())
+//              Ok(())
+            },
+//            _ => Err("Malformed .parse file".into())
+            _ => println!("Malformed .parse file")
           }
       },
       2 | 3 | 4 => { //skip lines 2,3 and 4.
         //do nothing..
-        Ok(())
-      }
+//        Ok(())
+      },
       _ => { //exit when reached body.
         break;
       }
-    }
+    };
 
   }
 
   //Initialise block matrix. //todo : use ndarray.
   for y in 0..n {
-    let y_row : Vec<BlockBuilder> = Vec::with_capacity(n as usize);
+    let mut y_row : Vec<BlockBuilder> = Vec::with_capacity(n as usize);
     for x in 0..n {
-      y_row.push(BlockBuilder::default().xy(Point(x,y)))
+      let mut block = BlockBuilder::default();
+      block.xy(Point(x,y));
+      y_row.push(block.clone())
     }
     blocks.push(y_row);
   };
   /////////////////////////////////////////////////////////////////////////////////////////////////
   //Parse Body //todo: put this in a function. -- it is hiding the matrix initialization code.
   /////////////////////////////////////////////////////////////////////////////////////////////////
-  while let Some((idx,line)) = lines_zipped.next(){
-    let _ = match idx{
-      5...line_count => {
-        let captured : Option<Captures> = PLACE_FILE_REGEX_data_lines.captures(&line); //captures, executes the regex query defined in 'util.rs'
-        match captured{
-          Some(ref cap) => {
-            let name = try!(Captures::name(cap,"name"));
-//                .ok_or::<Error>(format!("{} (LINE: {}) : No blk name specified",&file_path,&idx).into())); //todo : revise the errors.
+  let mut lines_zip_iter = lines_zipped.iter();
+  while let Some(&(idx,ref line)) = lines_zip_iter.next(){
+    if (idx >= 5){
+      let captured : Option<Captures> = PLACE_FILE_REGEX_data_lines.captures(line); //captures, executes the regex query defined in 'util.rs'
+      match captured{
+        Some(ref cap) => {
+          let name = try!(Captures::name(cap,"name")
+              .ok_or::<Error>(format!("{} (LINE: {}) : No blk name specified",&file_name,&idx).into())); //todo : revise the errors.
 
-            let xs = try!(Captures::name(cap,"x")
-                .ok_or::<Error>(format!("{} (LINE: {}) : No x coordinate specified",&file_name,&idx).into()));
+          let xs = try!(Captures::name(cap,"x")
+              .ok_or::<Error>(format!("{} (LINE: {}) : No x coordinate specified",&file_name,&idx).into()));
 
-            let ys = try!(Captures::name(cap,"y")
-                .ok_or::<Error>(format!("{} (LINE: {}) : No y coordinate specified",&file_name,&idx).into()));
+          let ys = try!(Captures::name(cap,"y")
+              .ok_or::<Error>(format!("{} (LINE: {}) : No y coordinate specified",&file_name,&idx).into()));
 
-            let sub_blk = try!(Captures::name(cap,"sub_blk")
-                .ok_or::<Error>(format!("{} (LINE: {}) : No subblk specified",&file_name,&idx).into()));
+          let sub_blk = try!(Captures::name(cap,"sub_blk")
+              .ok_or::<Error>(format!("{} (LINE: {}) : No subblk specified",&file_name,&idx).into()));
 
-            let blk_nr = try!(Captures::name(cap,"blk_nr")
-                .ok_or::<Error>(format!("{} (LINE: {}) : No blk_nr specified",&file_name,&idx).into()));
+          let blk_nr = try!(Captures::name(cap,"blk_nr")
+              .ok_or::<Error>(format!("{} (LINE: {}) : No blk_nr specified",&file_name,&idx).into()));
 
-            let (x,y) = (xs.as_str().parse::<u32>().unwrap(),ys.as_str().parse::<u32>().unwrap());
+          let x = xs.as_str().parse::<u32>().unwrap();
+          let y = ys.as_str().parse::<u32>().unwrap();
 
-            blocks[x as usize][y as usize].name(name.as_str()).sub_blk(sub_blk.as_str().parse::<u8>().unwrap());
-            placement_list.push((String::from(name.as_str()),Point(x,y)))
-          }
-          _ => break
+          blocks[x.clone() as usize][y.clone() as usize]
+              .name(name.as_str())
+              .sub_blk(sub_blk.as_str().parse::<u8>().unwrap());
+          placement_list.push((String::from(name.as_str()),Point(x.clone(),y.clone())));
         }
-      } ,
-      _ => break
-    };
+        _ => break
+      }
+    }else{
+      break
+    }
   }
   Ok((n,netlist_file,arch_file,placement_list,blocks))
 //  while idx.has_next(){
@@ -315,12 +324,12 @@ fn main() {
   let name = "test".to_owned();
 
   println!("hello world");
-  let place_file = name + ".place";
-  let route_file = name + ".route";
-  let blif_file = name + "pre-vpr.blif";
+  let place_file = format!("{}{}",&name,".place");
+  let route_file = format!("{}{}",&name,".route");
+  let blif_file  = format!("{}{}",&name,"pre-vpr.blif");
 
 
-  match load_placement(Path::new(place_file)) {
+  match load_placement(Path::new(&place_file)) {
     Ok((N,net_file,arch_file,place,blocks)) => {
 
     }
