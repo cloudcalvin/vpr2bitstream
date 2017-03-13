@@ -7,7 +7,13 @@ version = "0.1.0"
 derive_builder = "0.3.0"
 error-chain = "*"
 lazy_static = "0.2.4"
+mdo = "0.3.0"
 regex = "*"
+
+[dependencies.clap]
+default-features = true
+features = ["yaml", "suggestions", "color"]
+version = "*"
 
 [dependencies.nalgebra]
 version = "0.11"

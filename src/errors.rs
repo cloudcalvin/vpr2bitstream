@@ -40,6 +40,7 @@ error_chain! {
         Fmt(::std::fmt::Error);
         Io(::std::io::Error) #[cfg(unix)];
         Parse(::std::num::ParseIntError);
+        // Syntax(String);
     }
 
     // Define additional `ErrorKind` variants. The syntax here is
