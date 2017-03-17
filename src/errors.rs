@@ -40,6 +40,8 @@ error_chain! {
         Fmt(::std::fmt::Error);
         Io(::std::io::Error) #[cfg(unix)];
         Parse(::std::num::ParseIntError);
+        Regex(::regex::Error);
+
         // Syntax(String);
     }
 
