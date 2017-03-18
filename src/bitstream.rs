@@ -27,7 +27,7 @@ The reason this bitstream generation is done in its own :
 use types::*;
 use parse::*;
 use errors::*;
-
+use types::NodeMetaType;
 
 ////*
 ///
@@ -78,7 +78,9 @@ use errors::*;
 //pub fn build_bitstream<'a>(nets: &'a Vec<Net>, blocks : &'a Vec<Vec<Block>>, tiles : &'a mut Vec<Vec<TileBuilder>>) -> Result<usize>{
   pub fn build_bitstream<'a>(nets: &'a Vec<Net>, blocks : &'a Vec<Vec<Block>>, tiles : &'a mut Vec<Vec<Tile>>) {
 
-  let CH_WIDTH = GL_CONFIG.lock().unwrap().channel_width;
+  let gl = GL_CONFIG.lock().unwrap();
+  let CH_WIDTH = gl.channel_width;
+  let FPGA_WIDTH = gl.fpga_width;
 
   for net in nets {
     let branches : &RouteTree = net.route_tree.as_ref();
@@ -89,7 +91,14 @@ use errors::*;
       let route : &Route = route;
       let tracks : &Vec<Track> = route.tracks.as_ref();
 
-      //set sink and then set track->wilton_switches.
+      /*
+        Depending on the edge you are at, the sink should be handled differently
+
+         pad sink or lut sink?
+
+        top-pad, right-pad, bot-pad, left-pad.
+
+      */
 
       for (i,track) in tracks.into_iter().enumerate() { // each track maps to either an Channel_X or a Channel_y
         //set channel at tile[x][y] (probably one of 4 variations.) (maybe no variation and only sink varies depending on position of sink wrt fpga borders.
@@ -127,15 +136,109 @@ use errors::*;
               out_port = 3*CH_WIDTH + this_track.nr;
             }
           }
-          tiles[sb_x as usize][sb_y as usize].set_sw_b_bits(in_port,out_port);
+          tiles[sb_y as usize][sb_x as usize].set_sw_b_bits(in_port,out_port); // todo : make sure about tiles[][] indices vs vpr coordinates. [row][col]?
         }
-
-
-
-
       }
-      //also there is a sink.
-      //{}
+      /*
+
+      */
+      //set sink and then set track->wilton_switches.
+      let Sink(Point(x,y),meta_type, class, pin) = route.sink.unwrap(); // todo : errorh; must have a sink tho.. maybe redundant.
+      let prev_track : &Track = tracks.last().unwrap();
+//      let Point()
+
+      /*
+      if the last routing track lies within the sink tile, it must be a connection to BLE from right/top,
+      or a connection to a pad.
+
+      */
+      if meta_type == NodeMetaType::Pad{
+
+        if x==FPGA_WIDTH{ // right out
+          let mut tile = &mut tiles[y as usize][x as usize];
+          // from the CB through the SW output port.
+
+          // if it goes up
+          // must be ch_y from tile(x-1,y) that needs to go to port 2*SIZE-t_nr of SW_B at (x-1,y) with output at (TBA) on rhs.
+
+          // if it goes down, you must find the output port of the SB, trace it to the input and replicate the connection to the rhs.\
+          let port_nr = 2*CH_WIDTH-prev_track.nr;
+          match prev_track.nr%2 {
+            up @ 0 => {
+              let in_port = port_nr;
+              let out_port = port_nr-4;
+              ///no matter the track, if  it goes up, it has to turn right.. this means stil that you need to know the port nr?
+              tile.set_sw_b_bits(in_port,out_port);
+            },
+            down @ 1 => {
+              //if down, go check bits at port_nr + 4 and port_nr + 8;
+              //  if bit at '+4 is xx1 change it to x11,
+              // if bit at '+8 is x1x change it to 11x;
+              // note that there is no need for circular buffer as we only consider outputs going out of side 1. Thus only input from side 2 and 3.
+              let mut bit_from_left = tile.sw_blk[(4+(3*port_nr/2)) as usize]; //can only be port 4 and 6. -> 3*2 and 3*3 the starting idx's respectivly.
+              let mut bit_from_top = tile.sw_blk[(8+(3*port_nr/2)+1) as usize];
+              tile.sw_blk[4+(3*port_nr/2)+1] = bit_from_left;
+              tile.sw_blk[8+(3*port_nr/2)+2] = bit_from_top;
+            },
+            _ => unreachable!()
+          }
+
+
+        }else if y == 0{ // bot out
+          // from the CB through the SW into one of the designated output channel.
+
+        }else if x == 0{ // left out
+          // from the CB through the SW into one of the designated output channel.
+
+        }else if y == FPGA_WIDTH{ //top out
+          let mut tile = &mut tiles[y as usize][x as usize];
+          let port_nr = 2*CH_WIDTH+prev_track.nr;
+
+          match prev_track.nr%2 {
+            right @ 0 => {
+              let in_port = port_nr;
+              let out_port = port_nr + 4;
+              tile.set_sw_b_bits(in_port, out_port);
+            },
+            left @ 1 => {
+
+              //  if bit at '-4 is 1xx change it to 11x, {LSB == right-out}{MSB == left-out}
+              // if bit at '-8 is x1x change it to x11; if straight change to straight and right {}{s}{r} -> x11;
+              // TOOD: Document these better. especially pictures that wil help you reproduce in future.
+              let bit_from_bot = tile.sw_blk[(3 * (port_nr - 4)/ 2 + 2) as usize];
+              let bit_from_right = tile.sw_blk[(((3 * port_nr - 8) / 2) + 1) as usize ];
+
+              tile.sw_blk[((3 * port_nr - 4 / 2) + 1) as usize]  = bit_from_bot;
+              tile.sw_blk[((3 * port_nr - 8 / 2) + 0) as usize] = bit_from_right;
+            },
+            _ => unreachable!()
+          }
+        }else{
+          panic!("error")
+        }
+      }else{ // BLE input.
+        if prev_track.xy == Point(x,y){
+          if prev_track.orientation == XY::X{
+            //this means the connection is defined in the top connection block of the tile at x,y.
+          }else{
+            //its in the right connection block of tile at point.
+
+          }
+        }else if prev_track.orientation == XY::X{
+          //connect to lut at x,y+1
+
+        }else{
+          //connect to lut at x+1,y
+
+        }
+      }
+
+
+
+
+
+
+
     }
   }
 

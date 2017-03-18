@@ -18,14 +18,14 @@ pub struct Config{
   pub module_name: String,
   pub channel_width: u16,
   pub lut_k: u8,
-  pub grid_width: u16,
-  pub fpga_size : u16,
+  pub grid_width: u32,
+  pub fpga_width : u32,
 }
 
-#[derive(Default,Clone,Debug)]
+#[derive(Default,Clone,Debug,PartialEq)]
 pub struct Port(u32);
 
-#[derive(Default,Clone,Debug)]
+#[derive(Default,Clone,Debug,PartialEq)]
 pub struct Point(pub u32,pub u32);
 
 pub type MetaNumber = u16;
@@ -38,7 +38,7 @@ pub type Placement = (String, Point);
 pub struct Source(pub Point,pub Class,pub Pin);
 
 #[derive(Debug)]
-pub struct Sink(pub Point,pub Class,pub Pin);
+pub struct Sink(pub Point, pub NodeMetaType, pub Class, pub Pin);
 
 // Channels instantiated during the read from placement file and used during bitstream generation..
 #[derive(Debug)]
@@ -73,7 +73,7 @@ pub enum XY {
   X,
   Y
 }
-#[derive(Debug)]
+#[derive(Debug,PartialEq)]
 pub enum NodeType{
   Source,
   Sink,
@@ -81,12 +81,19 @@ pub enum NodeType{
   OPin,
   Chan(XY),
 }
-
+#[derive(Debug,PartialEq)]
+pub enum NodeMetaType{
+  Pin,
+  Pad,
+  Class,
+  Track
+}
 #[derive(Debug)]
 pub struct Node{
   pub node_nr : u32,
   pub node_type : NodeType,
   pub xy : Point,
+  pub meta_type : NodeMetaType,
   pub meta_nr : u16,
 }
 #[derive(Debug)]
@@ -174,18 +181,25 @@ impl Tile{
   ///               7 6 5 4
   ///
   ///
-  ///
+  /// //todo : give example
   ///
   ///  // given the out port, which selects the in port switch you can figure out from the reference point how many bits to skip.
   ///  // if considering the uni-directional wilton, only considering input ports the reference port (the 0 port) is the right top
   ///  // port, and you gou around the block clockwise with fc==3, it means every port you skip is a 3 added to the switch index.
 
   fn get_switchblock_path_index( in_port: u16, out_port: u16) -> usize{
-
-      let side = out_port/GL_CONFIG.lock().unwrap().channel_width; // should be rounded down(test that it does). side 0 is the rhs, and increases clockwise.
-      // based on input track and output size, determine switch.
-      let input_index = in_port / 2 ;
-      let bit_idx = input_index *side;
-      bit_idx as usize
+    let CH_WIDTH = GL_CONFIG.lock().unwrap().channel_width;
+    let output_side = out_port/CH_WIDTH as u16; // should be rounded down(test that it does). side 0 is the rhs, and increases clockwise.
+    let input_side = in_port/CH_WIDTH as u16;
+    let bit =  if in_port > out_port{
+      output_side-1
+    }else{
+      3-output_side
+    };
+    // based on input track and output size, determine switch.
+    let input_index = in_port / 2 as u16; //must round down..
+//    let bit_idx = input_side
+    let bit_idx =  input_index*3 + bit;
+    bit_idx as usize
   }
 }

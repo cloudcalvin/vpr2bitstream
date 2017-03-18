@@ -339,7 +339,7 @@ fn parse_net(text : &str) -> Result<Net>{
   let mut new_route = true;
 
   while let Some(node) = nodes.next(){
-    let Node{node_nr,node_type,xy,meta_nr} = parse_node(node)?;
+    let Node{node_nr,node_type,xy,meta_type,meta_nr} = parse_node(node)?;
     let _ = match node_type {
       NodeType::IPin =>
         {
@@ -348,7 +348,7 @@ fn parse_net(text : &str) -> Result<Net>{
 
           let pin_nr  = meta_nr;
           let mut route = route_tree.last_mut().unwrap();
-          route.sink = Some(Sink(xy,class_nr,pin_nr));
+          route.sink = Some(Sink(xy,meta_type,class_nr,pin_nr));
           new_route = true;
         },
       NodeType::Chan(orientation) =>
@@ -432,6 +432,9 @@ fn parse_node(line : &str) -> Result<Node> {
         .parse::<u32>()
         .unwrap();
 
+    let meta_type_str = try!(Captures::name(cap, "meta_name")
+        .ok_or::<Error>(format!("No node type specified").into()))
+        .as_str();
 
     let meta_nr = try!(Captures::name(cap, "meta_nr")
         .ok_or::<Error>(format!("Pin/pad/track/class not specified").into()))
@@ -449,10 +452,19 @@ fn parse_node(line : &str) -> Result<Node> {
       _         => bail!("Unsupported node type")
     };
 
+    let meta_type : Result<NodeMetaType>  = match meta_type_str{
+      "Pin"     => Ok(NodeMetaType::Pin),
+      "Pad"     => Ok(NodeMetaType::Pad),
+      "Class"   => Ok(NodeMetaType::Class),
+      "Track"   => Ok(NodeMetaType::Track),
+      _         => bail!("Unsupported node type")
+    };
+
     Ok(Node{
       node_nr: node_nr,
       node_type: node_type?,
       xy: Point(x,y),
+      meta_type : meta_type?,
       meta_nr: meta_nr
     })
 
