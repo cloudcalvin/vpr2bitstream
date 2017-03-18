@@ -436,7 +436,7 @@ fn parse_node(line : &str) -> Result<Node> {
     let meta_nr = try!(Captures::name(cap, "meta_nr")
         .ok_or::<Error>(format!("Pin/pad/track/class not specified").into()))
         .as_str()
-        .parse::<u32>()
+        .parse::<u16>()
         .unwrap();
 
     let node_type : Result<NodeType>  = match node_type_str{

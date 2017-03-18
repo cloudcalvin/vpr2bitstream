@@ -4,13 +4,22 @@ use std::cell::RefCell;
 pub use na::{Vector3, Rotation3};
 pub use na::{Dynamic, MatrixArray, MatrixVec, DMatrix};
 
+use std::sync::Mutex;
+
+lazy_static! {
+//    static ref ARRAY: Mutex<Vec<u8>> = Mutex::new(vec![]);
+    pub static ref GL_CONFIG: Mutex<Config> =  Mutex::new(Config::default());
+}
+
+//use ::GL_CONFIG;
 
 #[derive(Default, Debug, Builder)]
 pub struct Config{
- pub module_name: String,
- pub lut_k: u8,
- pub grid_width: u16,
- pub fpga_size : u16,
+  pub module_name: String,
+  pub channel_width: u16,
+  pub lut_k: u8,
+  pub grid_width: u16,
+  pub fpga_size : u16,
 }
 
 #[derive(Default,Clone,Debug)]
@@ -19,8 +28,9 @@ pub struct Port(u32);
 #[derive(Default,Clone,Debug)]
 pub struct Point(pub u32,pub u32);
 
-pub type Class = u32;
-pub type Pin = u32;
+pub type MetaNumber = u16;
+pub type Class = MetaNumber;
+pub type Pin = MetaNumber;
 //pub type Track = u32;
 pub type Placement = (String, Point);
 
@@ -34,11 +44,12 @@ pub struct Sink(pub Point,pub Class,pub Pin);
 #[derive(Debug)]
 pub struct Track{
   pub id : u32,
-  pub nr : u32,
+  pub nr : MetaNumber,
   pub xy : Point,
   pub orientation : XY,
   //  pub track : u32,
 }
+
 
 #[derive(Debug)]
 pub struct Route{
@@ -57,7 +68,7 @@ pub struct Net{
   pub src: Source,
   pub route_tree : RouteTree, //each outer vec is a new sub source. each inner vec is a connection.
 }
-#[derive(Debug)]
+#[derive(Debug,PartialEq)]
 pub enum XY {
   X,
   Y
@@ -76,7 +87,7 @@ pub struct Node{
   pub node_nr : u32,
   pub node_type : NodeType,
   pub xy : Point,
-  pub meta_nr : u32,
+  pub meta_nr : u16,
 }
 #[derive(Debug)]
 pub struct LogicBlock{ // aka : .names block
@@ -110,10 +121,12 @@ impl Block{
   }
 }
 
+//struct PortNr() //how would you change the bounds?
 
 #[derive(Default, Debug, Builder)]
 //#[builder(pattern="immutable")]
 pub struct Tile{
+//  pub conf : &mut Config;
   pub xy : Point,
   pub sw_blk : Vec<bool>,
   pub con_bkl_top : Vec<bool>,
@@ -130,9 +143,9 @@ impl Tile{
     ret.extend_from_slice(&self.con_bkl_right);
     return ret
   }
-  pub fn set_sw_b_bits(&mut self, in_port: PortNr, out_port: PortNr){
+  pub fn set_sw_b_bits(&mut self, in_port: u16, out_port: u16){
     //only sets to true. never to false?
-    self.sw_blk[get_switchblock_path_index(in_port, out_port)] = true;
+    self.sw_blk[Tile::get_switchblock_path_index(in_port, out_port)] = true;
   }
 
   ///    Given the nature of the unidirectional wilton SW block, only half of the port on each side is an input port..
@@ -167,12 +180,12 @@ impl Tile{
   ///  // if considering the uni-directional wilton, only considering input ports the reference port (the 0 port) is the right top
   ///  // port, and you gou around the block clockwise with fc==3, it means every port you skip is a 3 added to the switch index.
 
-  fn get_switchblock_path_index( in_port: PortNr, out_port: PortNr) -> usize{
+  fn get_switchblock_path_index( in_port: u16, out_port: u16) -> usize{
 
-    let side = (out_port/channel_width) as usize; // should be rounded down. side 0 is the rhs, and increases clockwise.
-    // based on input track and output size, determine switch.
-    let input_index = in_port / 2;
-    let bit_idx = input_index*side;
-    bit_idx
+      let side = out_port/GL_CONFIG.lock().unwrap().channel_width; // should be rounded down(test that it does). side 0 is the rhs, and increases clockwise.
+      // based on input track and output size, determine switch.
+      let input_index = in_port / 2 ;
+      let bit_idx = input_index *side;
+      bit_idx as usize
   }
 }

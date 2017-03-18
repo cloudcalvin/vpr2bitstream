@@ -29,12 +29,6 @@ use parse::*;
 use errors::*;
 
 
-
-
-
-
-
-
 ////*
 ///
 ///
@@ -57,38 +51,34 @@ use errors::*;
 ///
 ///
 ///
-///
+/*
+
+  If this new channel you are in is a higher channel (more right or more up if you stay in the same orientation) or
+  has changed orientation but stayed level with this channel, then the Swblock of the reference was the path you had to take..
+  Thus you need to access the tile at ref_coord.
+
+
+  if you are in a channel moving away from the reference channel in an increasing x(for x ref) or an increasing y (for y ref)
+
+  if the ref channel is moving up:
+    find the sw_blk port_nr for ref_track_nr and based on the output side of the SW-blk you have one of the
+
+*/
+/*
+  Connection Block:
+  PROG: {BOT_out, TOP_out, TOP_in}
+  // prog_data = 16'b1101100111101111;
+
+  prog_data = 16'b1000_0110_1010;
+
+  Wilton Switch Block:
+  PROG : {BOT_out, TOP_out, TOP_in}
+
+*/
 //pub fn build_bitstream<'a>(nets: &'a Vec<Net>, blocks : &'a Vec<Vec<Block>>, tiles : &'a mut Vec<Vec<TileBuilder>>) -> Result<usize>{
   pub fn build_bitstream<'a>(nets: &'a Vec<Net>, blocks : &'a Vec<Vec<Block>>, tiles : &'a mut Vec<Vec<Tile>>) {
 
-//  lazy_static!{
-//    right_turn(x,y) -> (x,y)
-//    left_turn(x,y) -> (x,y)
-//    up(x,y) -> (x,y)
-//    down(x,y) -> (x,y)
-//  }
-
-
-  /*
-    Connection Block:
-    PROG: {BOT_out, TOP_out, TOP_in}
-    // prog_data = 16'b1101100111101111;
-
-    prog_data = 16'b1000_0110_1010;
-
-    Wilton Switch Block:
-    PROG : {BOT_out, TOP_out, TOP_in}
-
-  */
-
-
-  let SIZE = 5 as usize;
-  let mut ref_track_nr = 0 as u16; //these can actually be u16..
-  let mut ref_dir = XY::X;
-  let (mut ref_x, mut ref_y) = (0 as u16,0 as u16); //these can actually be u16..
-  let mut ref_coord = 0; //these can actually be u16..
-  let mut sw_b_loc = Point(0,0);
-
+  let CH_WIDTH = GL_CONFIG.lock().unwrap().channel_width;
 
   for net in nets {
     let branches : &RouteTree = net.route_tree.as_ref();
@@ -101,86 +91,48 @@ use errors::*;
 
       //set sink and then set track->wilton_switches.
 
-      for track in tracks { // each track maps to either an Channel_X or a Channel_y
+      for (i,track) in tracks.into_iter().enumerate() { // each track maps to either an Channel_X or a Channel_y
         //set channel at tile[x][y] (probably one of 4 variations.) (maybe no variation and only sink varies depending on position of sink wrt fpga borders.
 
-        let t : &Track = track;
+        let this_track : &Track = track;
+        if let Some(prev_track) = tracks.get(i-1){
+          let Point(sb_x,sb_y) = if this_track.nr%2 == 0{ //up and right are true for even numbers.
+            prev_track.xy.clone()
+          }else{
+            this_track.xy.clone()
+          };
 
-        let (sb_x,sb_y) = if t.nr%2 == 0{ //up and right are true for even numbers.
-          ref_coords
-        }else{
-          (t.xy.1 ,t.xy.0)
-        };
-
-        //todo : find inport and outport
-        /*
-          if you are at tile xy going up/right your input could be from side 1 or side 2.. we dont know.
-
-            your track number is 4*2-ref_track_nr if up and   (aka Y channel)
-                              4*2+ref_track_nr if going right. (aka X channel)
-
-          if you are going down the til
-        */
-
-
-        //set the correct switch for the connection to be possible.
-        tiles[sb_x as usize][sb_y as usize].set_sw_b_bits(in_port,out_port);
-
-        ref_track_nr = t.nr;
-//        if t.orientation == X{
-//          xy = x;
-//        }else{
-//          xy = y;
-//        }
-//        if up_right == true :
-//          then if CH == X
-//
-
-
-        /*
-
-          If this new channel you are in is a higher channel (more right or more up if you stay in the same orientation) or
-          has changed orientation but stayed level with this channel, then the Swblock of the reference was the path you had to take..
-          Thus you need to access the tile at ref_coord.
-
-
-          if you are in a channel moving away from the reference channel in an increasing x(for x ref) or an increasing y (for y ref)
-
-          if the ref channel is moving up:
-            find the sw_blk port_nr for ref_track_nr and based on the output side of the SW-blk you have one of the
-
-        */
-
-
-//        if up_right { //then right left straight is only choices for a reference to have gone..
-//          if ref_coord > xy{
-//            this.sw_blk
-//          }else if ref_coord == xy{
-//            still this. but now it turned;
-//          }else if ref_coord < xy{
-//            then down
-//          }
-//        }
-
-
-        //the question is : where did we come from?
+          // Switch Block port calculation.
+          let (mut in_port,mut out_port) = (0,0);
+          if this_track.nr%2 == 0{ //up and/or right are true for even numbers.
+            if prev_track.orientation == XY::X{
+              in_port = 2*CH_WIDTH + prev_track.nr;   // in = right
+            }else{
+              in_port = 2*CH_WIDTH - prev_track.nr;   // in = up
+            }
+            if this_track.orientation == XY::X{
+              out_port = CH_WIDTH - this_track.nr;   // out = right
+            }else{
+              out_port = 3*CH_WIDTH + this_track.nr; // out = up
+            }
+          }else{ // directed down/left
+            if prev_track.orientation == XY::X{ //
+              in_port = CH_WIDTH -  prev_track.nr;
+            }else{
+              in_port = 2*CH_WIDTH -  prev_track.nr;
+            }
+            if this_track.orientation == XY::X{
+              out_port = 2*CH_WIDTH + this_track.nr;
+            }else{
+              out_port = 3*CH_WIDTH + this_track.nr;
+            }
+          }
+          tiles[sb_x as usize][sb_y as usize].set_sw_b_bits(in_port,out_port);
+        }
 
 
 
-//        tile.xy = Point(0,0)
 
-
-
-        /*
-          channel_x.get((x,y)) always lies in tile (x,y) -> channel_x((1,0) lies in tile @ point (1,0)
-          channel_x(x+1,y) aka next channel lies at tile ((x+1,y)).
-          channel_y.get((x,y)) also lies at tile (x,y) -> channel_y((1,0))(not that it exists(wil be used for pad 0,0(which doesnt exist) goes to tile 1,0.
-
-          F(x,y,O) -> F(x+1,y,O)
-          F(x,y,O) -> F(x-1,y,O)
-          F(x,y,O) -> F(x+1,y+1,O)
-          F(x,y,O) -> F(x-1,y-1,O)
-        */
       }
       //also there is a sink.
       //{}
