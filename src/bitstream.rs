@@ -84,7 +84,7 @@ use types::NodeMetaType;
     //
     //set source and then follow branches
     //
-    build_bitstream(blocks,tiles)
+//    build_bitstream(blocks,tiles)
 
 
 
