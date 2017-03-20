@@ -63,11 +63,24 @@ pub struct Route{
 pub type RouteTree = Vec<Route>;
 
 #[derive(Debug)]
-pub struct Net{
+pub enum Net{
+  Global(NetGlobal),
+  Local(NetLocal)
+}
+
+//pub trait Net{}
+#[derive(Debug)]
+pub struct NetLocal{
   pub name : String,
   pub src: Source,
+//  pub net_type: NetType,
   pub route_tree : RouteTree, //each outer vec is a new sub source. each inner vec is a connection.
 }
+//impl Net for NetLocal{}
+#[derive(Debug)]
+pub struct NetGlobal;
+//impl Net for NetGlobal{}
+
 #[derive(Debug,PartialEq)]
 pub enum XY {
   X,
@@ -80,6 +93,7 @@ pub enum NodeType{
   IPin,
   OPin,
   Chan(XY),
+  Block
 }
 #[derive(Debug,PartialEq)]
 pub enum NodeMetaType{
@@ -100,6 +114,7 @@ pub struct Node{
 pub struct LogicBlock{ // aka : .names block
   pub inputs : Vec<String>,
   pub output : String,
+//  pub latched : bool,
   pub truth_table : Vec<bool>
 }
 
@@ -108,6 +123,7 @@ pub struct Model{
   pub name: String,
   pub inputs : Vec<String>,
   pub outputs : Vec<String>,
+  pub latched : Vec<String>,
   pub logic : Vec<LogicBlock>,
 }
 
@@ -136,8 +152,8 @@ pub struct Tile{
 //  pub conf : &mut Config;
   pub xy : Point,
   pub sw_blk : Vec<bool>,
-  pub con_bkl_top : Vec<bool>,
-  pub con_bkl_right : Vec<bool>,
+  pub con_blk_top: Vec<bool>,
+  pub con_blk_right: Vec<bool>,
   pub ble : Vec<bool>,
 }
 
@@ -145,9 +161,9 @@ impl Tile{
   pub fn bitstream(&self) -> Vec<bool> {
     let mut ret = Vec::new();
     ret.extend_from_slice(&self.ble);
-    ret.extend_from_slice(&self.con_bkl_top);
+    ret.extend_from_slice(&self.con_blk_top);
     ret.extend_from_slice(&self.sw_blk);
-    ret.extend_from_slice(&self.con_bkl_right);
+    ret.extend_from_slice(&self.con_blk_right);
     return ret
   }
   pub fn set_sw_b_bits(&mut self, in_port: u16, out_port: u16){

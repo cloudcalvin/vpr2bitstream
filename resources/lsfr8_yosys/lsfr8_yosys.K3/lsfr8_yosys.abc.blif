@@ -1,0 +1,38 @@
+# Benchmark "lfsr8" written by ABC on Sun Mar 19 21:44:47 2017
+.model lfsr8
+.inputs clk rst
+.outputs out[0] out[1] out[2] out[3] out[4] out[5] out[6] out[7]
+
+.latch        n21     out[0] re        clk  0
+.latch        n25     out[1] re        clk  0
+.latch        n29     out[2] re        clk  0
+.latch        n33     out[3] re        clk  0
+.latch        n37     out[4] re        clk  0
+.latch        n41     out[5] re        clk  0
+.latch        n45     out[6] re        clk  0
+.latch        n49     out[7] re        clk  0
+
+.names out[3] out[4] n36
+01 1
+10 1
+.names out[5] out[7] n37_1
+01 1
+10 1
+.names rst out[0] n25
+01 1
+.names rst out[1] n29
+01 1
+.names rst out[2] n33
+01 1
+.names rst out[3] n37
+01 1
+.names rst out[4] n41
+01 1
+.names rst out[5] n45
+01 1
+.names rst out[6] n49
+01 1
+.names rst n36 n37_1 n21
+000 0
+011 0
+.end

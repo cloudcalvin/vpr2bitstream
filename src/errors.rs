@@ -53,5 +53,9 @@ error_chain! {
             description("invalid toolchain name")
             display("invalid toolchain name: '{}'", t)
         }
+        Block(t: String){
+          description("BLOCK")
+          display("BLOCK")
+        }
     }
 }

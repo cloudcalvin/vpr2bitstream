@@ -1,0 +1,203 @@
+
+/home/userd/Workspace/git-local-repos/vtr-with-yosys.compiled/vtr_flow/../yosys/yosys -v 2 yosys.ys
+1. Executing Verilog-2005 frontend.
+2. Executing HIERARCHY pass (managing design hierarchy).
+2.1. Analyzing design hierarchy..
+2.2. Analyzing design hierarchy..
+3. Executing PROC pass (convert processes to netlists).
+3.1. Executing PROC_CLEAN pass (remove empty switches from decision trees).
+3.2. Executing PROC_RMDEAD pass (remove dead branches from decision trees).
+3.3. Executing PROC_INIT pass (extract init attributes).
+3.4. Executing PROC_ARST pass (detect async resets in processes).
+3.5. Executing PROC_MUX pass (convert decision trees to multiplexers).
+3.6. Executing PROC_DLATCH pass (convert process syncs to latches).
+3.7. Executing PROC_DFF pass (convert process syncs to FFs).
+3.8. Executing PROC_CLEAN pass (remove empty switches from decision trees).
+4. Executing SCC pass (detecting logic loops).
+5. Executing OPT pass (performing simple optimizations).
+5.1. Executing OPT_EXPR pass (perform const folding).
+5.2. Executing OPT_MERGE pass (detect identical cells).
+5.3. Executing OPT_MUXTREE pass (detect dead branches in mux trees).
+5.4. Executing OPT_REDUCE pass (consolidate $*mux and $reduce_* inputs).
+5.5. Executing OPT_MERGE pass (detect identical cells).
+5.6. Executing OPT_RMDFF pass (remove dff with constant values).
+5.7. Executing OPT_CLEAN pass (remove unused cells and wires).
+5.8. Executing OPT_EXPR pass (perform const folding).
+5.9. Finished OPT passes. (There is nothing left to do.)
+6. Executing WREDUCE pass (reducing word size of cells).
+7. Executing SHARE pass (SAT-based resource sharing).
+8. Executing OPT pass (performing simple optimizations).
+8.1. Executing OPT_EXPR pass (perform const folding).
+8.2. Executing OPT_MERGE pass (detect identical cells).
+8.3. Executing OPT_MUXTREE pass (detect dead branches in mux trees).
+8.4. Executing OPT_REDUCE pass (consolidate $*mux and $reduce_* inputs).
+8.5. Executing OPT_MERGE pass (detect identical cells).
+8.6. Executing OPT_RMDFF pass (remove dff with constant values).
+8.7. Executing OPT_CLEAN pass (remove unused cells and wires).
+8.8. Executing OPT_EXPR pass (perform const folding).
+8.9. Finished OPT passes. (There is nothing left to do.)
+9. Executing FSM pass (extract and optimize FSM).
+9.1. Executing FSM_DETECT pass (finding FSMs in design).
+9.2. Executing FSM_EXTRACT pass (extracting FSM from design).
+9.3. Executing FSM_OPT pass (simple optimizations of FSMs).
+9.4. Executing OPT_CLEAN pass (remove unused cells and wires).
+9.5. Executing FSM_OPT pass (simple optimizations of FSMs).
+9.6. Executing FSM_RECODE pass (re-assigning FSM state encoding).
+9.7. Executing FSM_INFO pass (dumping all available information on FSM cells).
+9.8. Executing FSM_MAP pass (mapping FSMs to basic logic).
+10. Executing OPT pass (performing simple optimizations).
+10.1. Executing OPT_EXPR pass (perform const folding).
+10.2. Executing OPT_MERGE pass (detect identical cells).
+10.3. Executing OPT_RMDFF pass (remove dff with constant values).
+10.4. Executing OPT_CLEAN pass (remove unused cells and wires).
+10.5. Finished fast OPT passes.
+11. Executing MEMORY pass.
+11.1. Executing MEMORY_DFF pass (merging $dff cells to $memrd and $memwr).
+11.2. Executing OPT_CLEAN pass (remove unused cells and wires).
+11.3. Executing MEMORY_SHARE pass (consolidating $memrc/$memwr cells).
+11.4. Executing OPT_CLEAN pass (remove unused cells and wires).
+11.5. Executing MEMORY_COLLECT pass (generating $mem cells).
+12. Executing OPT_CLEAN pass (remove unused cells and wires).
+13. Executing OPT pass (performing simple optimizations).
+13.1. Executing OPT_EXPR pass (perform const folding).
+13.2. Executing OPT_MERGE pass (detect identical cells).
+13.3. Executing OPT_MUXTREE pass (detect dead branches in mux trees).
+13.4. Executing OPT_REDUCE pass (consolidate $*mux and $reduce_* inputs).
+13.5. Executing OPT_MERGE pass (detect identical cells).
+13.6. Executing OPT_RMDFF pass (remove dff with constant values).
+13.7. Executing OPT_CLEAN pass (remove unused cells and wires).
+13.8. Executing OPT_EXPR pass (perform const folding).
+13.9. Finished OPT passes. (There is nothing left to do.)
+14. Executing TECHMAP pass (map to technology primitives).
+14.1. Executing Verilog-2005 frontend.
+15. Executing TECHMAP pass (map to technology primitives).
+15.1. Executing Verilog-2005 frontend.
+16. Executing MEMORY_MAP pass (converting $mem cells to logic and flip-flops).
+17. Executing OPT pass (performing simple optimizations).
+17.1. Executing OPT_EXPR pass (perform const folding).
+17.2. Executing OPT_MERGE pass (detect identical cells).
+17.3. Executing OPT_MUXTREE pass (detect dead branches in mux trees).
+17.4. Executing OPT_REDUCE pass (consolidate $*mux and $reduce_* inputs).
+17.5. Executing OPT_MERGE pass (detect identical cells).
+17.6. Executing OPT_RMDFF pass (remove dff with constant values).
+17.7. Executing OPT_CLEAN pass (remove unused cells and wires).
+17.8. Executing OPT_EXPR pass (perform const folding).
+17.9. Finished OPT passes. (There is nothing left to do.)
+18. Executing TECHMAP pass (map to technology primitives).
+18.1. Executing Verilog-2005 frontend.
+19. Executing OPT pass (performing simple optimizations).
+19.1. Executing OPT_EXPR pass (perform const folding).
+19.2. Executing OPT_MERGE pass (detect identical cells).
+19.3. Executing OPT_RMDFF pass (remove dff with constant values).
+19.4. Executing OPT_CLEAN pass (remove unused cells and wires).
+19.5. Finished fast OPT passes.
+20. Executing FLATTEN pass (flatten design).
+21. Executing ABC pass (technology mapping using ABC).
+
+21. Executing ABC pass (technology mapping using ABC).
+21.1. Summary of detected clock domains:
+
+21.1. Summary of detected clock domains:
+21.2. Extracting gate netlist of module `\lfsr8' to `<abc-temp-dir>/input.blif'..
+  19 cells in clk=\clk, en={ }
+
+21.2. Extracting gate netlist of module `\lfsr8' to `<abc-temp-dir>/input.blif'..
+Found matching posedge clock domain: \clk
+Extracted 19 gates and 21 wires to a netlist network with 1 inputs and 8 outputs.
+
+21.2.1. Executing ABC.
+Running ABC command: <yosys-exe-dir>/yosys-abc -s -f <abc-temp-dir>/abc.script 2>&1
+ABC: ABC command line: "source <abc-temp-dir>/abc.script".
+ABC: 
+ABC: + read_blif <abc-temp-dir>/input.blif 
+ABC: + read_library <abc-temp-dir>/stdcells.genlib 
+ABC: Entered genlib library with 15 gates from file "<abc-temp-dir>/stdcells.genlib".
+ABC: + source -x abc_vtr.rc 
+ABC: abc - > read_lut abc_lut6.lut;
+ABC: abc - > source abc.rc;
+ABC: Loading resource file "abc.rc".
+ABC: abc - > print_lut;
+ABC: # The area/delay of k-variable LUTs:
+ABC: # k    area     delay
+ABC: 1      1.00      1.00
+ABC: 2      1.00      1.00
+ABC: 3      1.00      1.00
+ABC: 4      1.00      1.00
+ABC: 5      1.00      1.00
+ABC: 6      1.00      1.00
+ABC: abc - > resyn;
+ABC: abc - > resyn2;
+ABC: abc - > if;
+ABC: abc - > print_stats;
+ABC: netlist                       : i/o =    1/    8  lat =    8  nd =     8  edge =     19  aig  =    17  lev = 1
+ABC: abc - > time;
+ABC: elapse: 0.03 seconds, total: 0.03 seconds
+ABC: + write_blif <abc-temp-dir>/output.blif 
+
+21.2.2. Re-integrating ABC results.
+ABC RESULTS:              $lut cells:       16
+ABC RESULTS:               DFF cells:        8
+ABC RESULTS:        internal signals:       12
+ABC RESULTS:           input signals:        1
+ABC RESULTS:          output signals:        8
+Removing temp directory.
+22. Executing TECHMAP pass (map to technology primitives).
+22.1. Executing Verilog-2005 frontend.
+23. Executing OPT pass (performing simple optimizations).
+23.1. Executing OPT_EXPR pass (perform const folding).
+23.2. Executing OPT_MERGE pass (detect identical cells).
+23.3. Executing OPT_RMDFF pass (remove dff with constant values).
+23.4. Executing OPT_CLEAN pass (remove unused cells and wires).
+23.5. Finished fast OPT passes.
+24. Executing Verilog-2005 frontend.
+25. Executing Verilog-2005 frontend.
+26. Executing Verilog-2005 frontend.
+27. Executing Verilog-2005 frontend.
+28. Executing HIERARCHY pass (managing design hierarchy).
+28.1. Analyzing design hierarchy..
+28.2. Analyzing design hierarchy..
+29. Printing statistics.
+
+29. Printing statistics.
+
+=== lfsr8 ===
+
+   Number of wires:                 12
+   Number of wire bits:             26
+   Number of public wires:           4
+   Number of public wire bits:      18
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                 16
+     $_DFF_P_                        8
+     $lut                            8
+
+30. Executing BLIF backend.
+End of script. Logfile hash: 43bbd6fbc4
+CPU: user 0.04s system 0.01s, MEM: 39.55 MB total, 9.57 MB resident
+Yosys 0.6+259 (git sha1 372d672, clang 3.8.0-2ubuntu4 -fPIC -Os)
+Time spent: 30% 14x read_verilog (0 sec), 23% 11x opt_expr (0 sec), ...
+	Command being timed: "/home/userd/Workspace/git-local-repos/vtr-with-yosys.compiled/vtr_flow/../yosys/yosys -v 2 yosys.ys"
+	User time (seconds): 0.09
+	System time (seconds): 0.02
+	Percent of CPU this job got: 96%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.12
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 32724
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 5346
+	Voluntary context switches: 14
+	Involuntary context switches: 127
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 48
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
