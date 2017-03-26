@@ -1,5 +1,6 @@
 use types::*;
 use errors::*;
+use global::*;
 
 use std::iter::Map;
 use std::fs::File;
@@ -309,8 +310,8 @@ fn parse_net(text: &str) -> Result<Net> {
     // the first two lines describe the source
     let src = body.next().ok_or::<Error>("Malformed .route file: Missing SOURCE node".into())?;
     let src_pin = body.next().ok_or::<Error>("Malformed .route file: missing IPIN node".into())?;
-    let src_data = parse_node(src)?;
-    let pin_data = parse_node(src_pin)?;
+    let src_data : Node = parse_node(src)?;
+    let pin_data : Node = parse_node(src_pin)?;
 
     //init route tree
     let mut route_tree = RouteTree::new();
@@ -382,7 +383,7 @@ fn parse_net(text: &str) -> Result<Net> {
     }
     Ok(Net::Local(NetLocal {
       name: net_name.to_owned(),
-      src: Source(src_data.xy, src_data.meta_nr, pin_data.meta_nr),
+      src: Source(src_data.xy, src_data.meta_type ,src_data.meta_nr, pin_data.meta_nr),
 //      net_type: NetType::NonGlobal,
       route_tree: route_tree,
     }))

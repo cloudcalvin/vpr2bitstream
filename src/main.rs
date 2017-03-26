@@ -3,11 +3,13 @@ mod errors;
 mod types;
 mod bitstream;
 mod parse;
+mod global;
 
 use errors::*;
 use types::*;
 use parse::*;
 use bitstream::*;
+use global::*;
 
 #[macro_use]
 extern crate error_chain;
@@ -31,25 +33,6 @@ use clap::YamlLoader;
 use std::path::Path;
 use std::cell::RefCell;
 
-
-
-//pub static GL_CONFIG: Arc<RefCell<types::Config> = RefCell::new(Config::default());
-
-//static CLI_YAML: &'static Yaml = load_yaml!("cli.yml");
-//'static CLI_YAML : YamlLoader = load_yaml!("cli.yml");
-//static YAML_FILE: &'static str = "cli.yml";
-//lazy_static!{
-////  static ref YAML_FILE: &'static str = "cli.yml";
-////  pub static ref YAML : &'static Yaml = load_yaml!(format!("{}", YAML_FILE));
-//  pub static ref MATCHES : ArgMatches<'static> = |&'static Yaml| App::from_yaml(&yml).get_matches();
-//}
-
-//thread_local!(pub static GL_CONFIG: RefCell<Option<types::Config>> = RefCell::new(Some(types::Config::default())));
-//thread_local!(pub static GL_CONFIG: Option<types::Config> = RefCell::new(Some(types::Config::default())));
-//thread_local!(pub static CONFIG_MAP: HashMap<Config> = HashMap::new());
-
-//lazy_static!{
-//  }
 
 fn main() {
 
@@ -213,6 +196,23 @@ fn main() {
   /////////////////////////////////////////////////////////////////////////////////////////////////
   //Generate the bitstream : //todo : to pre-generate the tile matrix or not to pre-generate te tile matrix, that is the question.
   /////////////////////////////////////////////////////////////////////////////////////////////////
+
+  //from the config file, build the Tile Matrix, setting the correct types that wil determine
+  // which mapping process' to follow.
+
+  use types::SwitchBlockType::*;
+  let mut tiles : Vec<Vec<TileBuilder>> = Vec::capacity(*N_TILES);
+  tiles = for y in 0..*N_TILES {
+    let mut y_row : Vec<TileBuilder> = Vec::capacity(*N_TILES);
+    for x in 0..*N_TILES{
+      match FPGA_SW_BLK_TYPE {
+        WiltonSwitchBlock => y_row.push(TileBuilder::default().xy(x,y)),
+        _ => panic!("unsupported switch block type")
+      }
+    }
+    y_row
+  };
+
   /*  for placement in place {
       let (string,Point(x,y)) = placement; //todo : what string?
       blocks[x.clone() as usize][y.clone() as usize]

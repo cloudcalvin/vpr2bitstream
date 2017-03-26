@@ -20,6 +20,7 @@
 
   <!-- Physical descriptions begin -->
   <layout  auto="1.0"/>
+  <!--<layout width="10" height="10"/>-->
   <device>
     <sizing R_minW_nmos="4220.930176" R_minW_pmos="11207.599609" ipin_mux_trans_size="0.983352"/>
     <timing C_ipin_cblock="0.000000e+00" T_ipin_cblock="8.045000e-11"/>
@@ -112,8 +113,8 @@
 
     <!-- Define general purpose logic block (CLB) begin -->
     <pb_type name="clb">
-      <input name="I" num_pins="3" equivalent="false"/>
-      <output name="O" num_pins="1" equivalent="false"/>
+      <input name="in" num_pins="3" equivalent="false"/>
+      <output name="out" num_pins="1" equivalent="true"/>
       <clock name="clk" num_pins="1"/>
 
       <!-- Describe basic logic element.
@@ -158,13 +159,16 @@
                 <pack_pattern name="ble3" in_port="lut3.out" out_port="ff.D"/>
               </direct>
               <direct name="direct3" input="ble3.clk" output="ff.clk"/>
-              <mux name="mux1" input="ff.Q lut3.out" output="ble3.out">
-              </mux>
+              <!--<mux name="mux1" input="ff.Q lut3.out" output="ble3.out[0]"/>-->
+              <!--<mux name="mux2" input="ff.Q lut3.out" output="ble3.out[1]"/>-->
+              <mux name="mux1" input="ff.Q lut3.out" output="ble3.out"/>
             </interconnect>
           </pb_type>
           <interconnect>
-            <direct name="direct1" input="clb.I" output="ble3.in"/>
-            <direct name="direct2" input="ble3.out" output="clb.O"/>
+            <direct name="direct1" input="clb.in" output="ble3.in"/>
+            <direct name="direct2" input="ble3.out" output="clb.out"/>
+            <!--<direct name="direct2" input="ble3.out" output="clb.out[0]"/>-->
+            <!--<direct name="direct4" input="ble3.out" output="clb.out[1]"/>-->
             <direct name="direct3" input="clb.clk" output="ble3.clk"/>
           </interconnect>
         </mode>
@@ -198,9 +202,17 @@
 
       <pinlocations pattern="spread"/>
 
+      <!--CANT GET CUSTOM LEFT OUT TO WORK AS SPREAD DOES-->
+      <!--<pinlocations pattern="custom">
+        &lt;!&ndash;<loc side="bottom">clb.out</loc>&ndash;&gt;
+        <loc side="left">clb.out</loc>
+        &lt;!&ndash;<loc side="top">clb.out[1]</loc>&ndash;&gt;
+      </pinlocations>-->
+
       <!-- Place this general purpose logic block in any unspecified column -->
       <gridlocations>
         <loc type="fill" priority="1"/>
+        <!--<loc type="rel" pos="float" priority="int"/>-->
       </gridlocations>
     </pb_type>
     <!-- Define general purpose logic block (CLB) ends -->
