@@ -34,7 +34,39 @@
   </device>
   <switchlist>
     <switch type="mux" name="0" R="0.000000" Cin="0.000000e+00" Cout="0.000000e+00" Tdel="6.244000e-11" mux_trans_size="1.835460" buf_size="10.498600"/>
+
+
   </switchlist>
+
+  <!--<switchblocklist>-->
+    <!--<switchblock name="my_switchblock" type="unidir">-->
+      <!--<switchblock_location type="EVERYWHERE"/>-->
+      <!--<switchfuncs>-->
+        <!--<func type="lr" formula="t"/>-->
+        <!--<func type="lt" formula="W-t"/>-->
+        <!--<func type="lb" formula="W+t-1"/>-->
+        <!--<func type="rt" formula="W+t-1"/>-->
+        <!--<func type="br" formula="W-t-2"/>-->
+        <!--<func type="bt" formula="t"/>-->
+        <!--<func type="rl" formula="t"/>-->
+        <!--<func type="tl" formula="W-t"/>-->
+        <!--<func type="bl" formula="W+t-1"/>-->
+        <!--<func type="tr" formula="W+t-1"/>-->
+        <!--<func type="rb" formula="W-t-2"/>-->
+        <!--<func type="tb" formula="t"/>-->
+      <!--</switchfuncs>-->
+      <!--<wireconn from_type="l4" to_type="l4" from_switchpoint="0,1,2,3" to_switchpoint="0"/>-->
+      <!--<wireconn from_type="l8_global" to_type="l8_global" from_switchpoint="0,4"-->
+                <!--to_switchpoint="0"/>-->
+      <!--<wireconn from_type="l8_global" to_type="l4" from_switchpoint="0,4"-->
+                <!--to_switchpoint="0"/>-->
+    <!--</switchblock>-->
+
+    <!--&lt;!&ndash;<switchblock name="another_switch_block" type="unidir">&ndash;&gt;-->
+    <!--&lt;!&ndash;... another switch block description ...&ndash;&gt;-->
+    <!--&lt;!&ndash;</switchblock>&ndash;&gt;-->
+  <!--</switchblocklist>-->
+  <!---->
   <segmentlist>
     <segment freq="1.000000" length="1" type="unidir" Rmetal="0.000000" Cmetal="0.000000e+00">
     <mux name="0"/>
@@ -42,6 +74,7 @@
     <cb type="pattern">1</cb>
     </segment>
   </segmentlist>
+
 
   <complexblocklist>
 
@@ -165,11 +198,12 @@
             </interconnect>
           </pb_type>
           <interconnect>
+            <direct name="clks" input="clb.clk" output="ble3.clk"/>
             <direct name="direct1" input="clb.in" output="ble3.in"/>
             <direct name="direct2" input="ble3.out" output="clb.out"/>
             <!--<direct name="direct2" input="ble3.out" output="clb.out[0]"/>-->
             <!--<direct name="direct4" input="ble3.out" output="clb.out[1]"/>-->
-            <direct name="direct3" input="clb.clk" output="ble3.clk"/>
+            <!--<direct name="direct3" input="clb.clk" output="ble3.clk"/>-->
           </interconnect>
         </mode>
         <!-- 4-LUT mode definition end -->
@@ -186,8 +220,7 @@
         <direct name="clbouts1" input="fle[0:0].out" output="clb.O"/>
       </interconnect>
     -->
-    <!--
-      <interconnect>
+<!--      <interconnect>
         <complete name="crossbar" input="clb.I ble4.out" output="ble4.in">
           <delay_constant max="5.735000e-11" in_port="clb.I" out_port="ble4.in" />
           <delay_constant max="5.428000e-11" in_port="ble4.out" out_port="ble4.in" />
@@ -195,8 +228,7 @@
         <complete name="clks" input="clb.clk" output="ble4.clk">
         </complete>
         <direct name="clbouts1" input="ble4.out" output="clb.O"/>
-      </interconnect>
-      -->
+      </interconnect>-->
       <!-- Every input pin is driven by 15% of the tracks in a channel, every output pin is driven by 25% of the tracks in a channel -->
       <fc default_in_type="frac" default_in_val="1.0" default_out_type="frac" default_out_val="1.0"/>
 
@@ -204,9 +236,11 @@
 
       <!--CANT GET CUSTOM LEFT OUT TO WORK AS SPREAD DOES-->
       <!--<pinlocations pattern="custom">
-        &lt;!&ndash;<loc side="bottom">clb.out</loc>&ndash;&gt;
+        <loc side="right">clb.in[0]</loc>
+        <loc side="bottom">clb.in[1]</loc>
+        <loc side="bottom">clb.clk[0]</loc>
+        <loc side="top">clb.in[2]</loc>
         <loc side="left">clb.out</loc>
-        &lt;!&ndash;<loc side="top">clb.out[1]</loc>&ndash;&gt;
       </pinlocations>-->
 
       <!-- Place this general purpose logic block in any unspecified column -->
