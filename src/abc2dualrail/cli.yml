@@ -3,22 +3,36 @@ version: "1.0"
 author: Maree C. <calvinworkaccount@live.co.uk>
 about: Parses VPR FPGA placement and routing output into a bitstream used to program the fpga.
 args:
+    - INPUT:
+        # short: i
+        # long: input    
+        value_name: FILE
+        # takes_value: tue
+        index: 1
+        help: the VPR project name to use for place, route and blif file.
+    - output:
+        short: o
+        long: output
+        takes_value: true
+        value_name: FILE        
+        help: Sets the name for the output file
     - verbose:
         short: v
         long: verbose
         multiple: true
         help: Sets the level of verbosity
+    - debug:
+        short: d
+        long: debug
+        value_name: OPTION
+        multiple: true
+        takes_value: true
     - config:
         short: c
         long: config
         value_name: FILE
         takes_value: true
         help: Sets a custom config file
-    - INPUT:
-        value_name: FILE
-        takes_value: false
-        index: 1
-        help: the VPR project name to use for place, route and blif file.
     - blif:
         short: b
         long: blif
@@ -37,13 +51,13 @@ args:
         value_name: FILE
         takes_value: true
         help: Sets the .route file to use
-
-subcommands:
-    - test:
-        about: controls testing features
-        version: "1.3"
-        author: Someone E. <someone_else@other.com>
-        args:
-            - debug:
-                short: d
-                help: print debug information
+#
+#subcommands:
+#    - test:
+#        about: controls testing features
+#        version: "1.3"
+#        author: Someone E. <someone_else@other.com>
+#        args:
+#            - debug:
+#                short: d
+#                help: print debug information
