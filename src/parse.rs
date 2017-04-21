@@ -1,5 +1,6 @@
 use types::*;
 use errors::*;
+#[macro_use]
 use global::*;
 
 use std::iter::Map;
@@ -9,6 +10,7 @@ use std::io::BufRead;
 use std::path::Path;
 use std::io;
 use std::io::prelude::*;
+use std::collections::HashMap;
 
 pub use regex::{Regex, Captures, RegexSet};
 
@@ -46,7 +48,7 @@ pub use regex::{Regex, Captures, RegexSet};
 ///     n35		      5	3	0	#7
 /// ``` note: not as well aligned in real file.
 ///
-pub fn parse_place_file<P: AsRef<Path>>(file_path: P) -> Result<(u32, String, String, Vec<Placement>)> {
+pub fn parse_place_file<P: AsRef<Path>>(file_path: P) -> Result<(u16, String, String, Placement)> {
   //Setup regex's
   lazy_static! { // TODO  :make these regex look better.
     static ref PLACE_FILE_REGEX_files : Regex = Regex::new(
@@ -60,10 +62,10 @@ pub fn parse_place_file<P: AsRef<Path>>(file_path: P) -> Result<(u32, String, St
     ).unwrap();
   }
   // Init variable
-  let mut n: u32 = 0;
+  let mut n: u16 = 0;
   let mut netlist_file = String::new();
   let mut arch_file = String::new();
-  let mut placement_list: Vec<Placement> = Vec::new();
+  let mut placement: Placement = HashMap::new();
   let file_name = (*file_path.as_ref()).to_str().unwrap();// {
   println!("Read file : {}", &file_name);
 
@@ -123,7 +125,7 @@ pub fn parse_place_file<P: AsRef<Path>>(file_path: P) -> Result<(u32, String, St
             Some(ref cap) => {
               let array_size = try!(Captures::name(cap, "size")
                   .ok_or::<Error>("No array size specified in .place file.".into()));
-              n = array_size.as_str().parse::<u32>()?;
+              n = array_size.as_str().parse::<u16>()?;
             },
             _ => println!("Malformed .parse file")
           }
@@ -165,19 +167,20 @@ pub fn parse_place_file<P: AsRef<Path>>(file_path: P) -> Result<(u32, String, St
         let sub_blk = try!(Captures::name(cap, "sub_blk")
             .ok_or::<Error>(format!("{} (LINE: {}) : No subblk specified", &file_name, &idx).into()));
 
-        let x = xs.as_str().parse::<u32>().unwrap();
-        let y = ys.as_str().parse::<u32>().unwrap();
+        let x = xs.as_str().parse::<u16>().unwrap();
+        let y = ys.as_str().parse::<u16>().unwrap();
 
-        placement_list.push((String::from(name.as_str()), Point(x.clone(), y.clone())));
+//        placement_list.push((String::from(name.as_str()), Point(x.clone(), y.clone())));
+        placement.insert(String::from(name.as_str()), Point(x.clone(), y.clone()));
         //          println!("{:#?}",(String::from(name.as_str()),Point(x.clone(),y.clone())));
       }
-      None => println!("skipping BLIF lines : >{}<", &line)
+      None => info_println!("skipping BLIF lines : >{}<", &line)
     }
     //    }else{
     //      break
     //    }
   }
-  Ok((n, netlist_file, arch_file, placement_list))
+  Ok((n, netlist_file, arch_file, placement))
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -199,9 +202,9 @@ pub fn parse_place_file<P: AsRef<Path>>(file_path: P) -> Result<(u32, String, St
 ///
 ///
 
-pub fn parse_route_file<P: AsRef<Path>>(file_path: P) -> Result<(u32, Vec<Net>)> {
+pub fn parse_route_file<P: AsRef<Path>>(file_path: P) -> Result<(u16, Vec<Net>)> {
   // Init return variables and regex
-  let mut n: u32 = 0;
+  let mut n: u16 = 0;
   let mut nets: Vec<Net> = Vec::new();
 
   lazy_static! {
@@ -242,7 +245,7 @@ pub fn parse_route_file<P: AsRef<Path>>(file_path: P) -> Result<(u32, Vec<Net>)>
     Some(ref cap) => {
       let array_size = try!(Captures::name(cap, "arr_size")
           .ok_or::<Error>("No array size specified in .place file.".into()));
-      n = array_size.as_str().parse::<u32>()?;
+      n = array_size.as_str().parse::<u16>()?;
     },
     _ => println!("Malformed .parse file")
   }
@@ -295,7 +298,7 @@ fn parse_net(text: &str) -> Result<Net> {
 
   let net_nr = try!(Captures::name(net_cap, "net_nr")
       .ok_or::<Error>("Net number missing in file: , line : .".into()))
-      .as_str().parse::<u32>()?;
+      .as_str().parse::<u64>()?;
 
   let net_name = try!(Captures::name(net_cap, "net_name")
       .ok_or::<Error>("Net name missing in file: , line : .".into()))
@@ -357,7 +360,7 @@ fn parse_net(text: &str) -> Result<Net> {
               },
             NodeType::OPin => {
               //dont think i need to know this..
-              println!("Ignoring secondary OPIN nodes found in net : \
+              info_println!("Ignoring secondary OPIN nodes found in net : \
                   {} {} {:?} {} with the SOURCE OPIN at {:?} {}",
                        node_nr, &"OPIN", xy, meta_nr, src_data.xy, pin_data.meta_nr);
               Ok::<(), Error>(())
@@ -383,7 +386,7 @@ fn parse_net(text: &str) -> Result<Net> {
     }
     Ok(Net::Local(NetLocal {
       name: net_name.to_owned(),
-      src: Source(src_data.xy, src_data.meta_type ,src_data.meta_nr, pin_data.meta_nr),
+      src: Source(src_data.xy, pin_data.meta_type ,src_data.meta_nr, pin_data.meta_nr),
 //      net_type: NetType::NonGlobal,
       route_tree: route_tree,
     }))
@@ -426,10 +429,10 @@ fn parse_node(line: &str) -> Result<Node> {
         }else{*/
     //TODO : change all these errors to regex error.
     let node_nr = try!(Captures::name(cap, "node_nr")
-        .ok_or::<Error>(format!("No node specified").into()))         //  Option<Match> -> Result<Match>
-        .as_str()                                                                                       //  Match -> String
-        .parse::<u32>()                                                                                 //  String -> unsigned int
-        .unwrap();                                                                                      //  Result<u32> -> u32
+        .ok_or::<Error>(format!("No node specified").into()))                                       //  Option<Match> -> Result<Match>
+        .as_str()                                                                                   //  Match -> String
+        .parse::<u64>()                                                                             //  String -> unsigned int
+        .unwrap();                                                                                  //  Result<u32> -> u32
     let node_type_str = try!(Captures::name(cap, "node_type")
         .ok_or::<Error>(format!("No node type specified").into()))
         .as_str();
@@ -437,13 +440,13 @@ fn parse_node(line: &str) -> Result<Node> {
     let x = try!(Captures::name(cap, "x")
         .ok_or::<Error>(format!("No node x coordinate type specified").into()))
         .as_str()
-        .parse::<u32>()
+        .parse::<u16>()
         .unwrap();
 
     let y = try!(Captures::name(cap, "y")
         .ok_or::<Error>(format!("No node y coordinate type specified").into()))
         .as_str()
-        .parse::<u32>()
+        .parse::<u16>()
         .unwrap();
 
     let meta_type_str = try!(Captures::name(cap, "meta_name")
@@ -489,6 +492,7 @@ fn parse_node(line: &str) -> Result<Node> {
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////
 //Parse .blif file :
+//contains '.names' id's and lut content. content mapped to input ports..
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /// Returns (populates) an array of blocks partially with the LUT content.
 ///
@@ -536,7 +540,7 @@ pub fn parse_blif_file<'a, P: AsRef<Path>>(file_path: P) -> Result<Vec<Model>> {
 
   let mut contents = String::new();
   file.read_to_string(&mut contents).unwrap();
-  println!("Read file : {}", &file_name);
+  info_println!("Read file : {}", &file_name);
 
 
   //split file into header vs data
@@ -600,7 +604,7 @@ fn parse_blif_model(content: &str) -> Result<Model> {
     let mut model_parts = RE_split_on_dot.split(&content);
     let mut parts = RE_split_on_dot.split(&content);
     for p in parts {
-      println!("part : {:?}", p);
+      debug_println!("part : {:?}", p);
     }
     let model_name_line = model_parts.next().ok_or("Malformed blif file : Incorrect model header.").unwrap();
     let inputs = model_parts.next().ok_or("Malformed blif file : Incorrect model header.").unwrap();
@@ -625,7 +629,7 @@ fn parse_blif_model(content: &str) -> Result<Model> {
   for primitive in model_parts {
     if let Some(ref cap) = RE_primitive.captures(primitive) {
       if let Some(lut_line) = Captures::name(cap, "lut_line") {
-        println!("captured a lut : {:?}", lut_line.as_str());
+        debug_println!("captured a lut : {:?}", lut_line.as_str());
         let mut inputs: Vec<String> = Vec::new();
         let mut output = String::new();
         let mut lines = lut_line.as_str().lines(); //remember : iterator, thus keeps state..
@@ -643,20 +647,45 @@ fn parse_blif_model(content: &str) -> Result<Model> {
         output = inputs.pop().ok_or::<Error>("No output".into())?;
 
 
-        let truth_lines = lines.map(|s| s.to_owned()).collect();
         lazy_static! {
           static ref k : usize = 3;
           static ref tt_size : usize = (2 as usize).pow(3);
         }
-        let mut truth = vec![false; *tt_size];
+
+        let truth_lines = lines.map(|s| s.to_owned()).collect();
+
+        let mut truth_idxs = Vec::with_capacity(*tt_size);
+        let mut truth_table = vec![false; *tt_size];
 
         let mut tt_full = Vec::new();
         for i in 0..*tt_size {
           tt_full.push(format!("{:01$b}", i, k));
         }
 
+
+//        for line in truth_lines {
+//          //      println!("line: {}",&line);
+//          if let Some(ref cap) = Regex::new(r"(?P<in>\d+) (\d+)").unwrap().captures(line) {
+//            let _in = Captures::name(cap, "in")
+//                .ok_or::<Error>(format!("Could not fine output value in truth table").into()).unwrap()
+//                .as_str().to_owned();
+//            let mut _in = _in;
+//            let mut idx = 0u16;
+//            for i in 0.._in.len(){
+//              let char = _in.pop().unwrap();
+//              if char == '1'{
+//                idx = idx + 2u16.pow(i as u32)
+//              }
+//            }
+//
+//          } else {
+//            panic!("Could not capture any inputs or outputs from truth-table")
+//          }
+//        }
+
         //dont-care replacement
         let mut lut_data = replace(truth_lines);
+
 
         //assumption made here that truth table is in right order.
         for line in lut_data.iter() {
@@ -674,8 +703,10 @@ fn parse_blif_model(content: &str) -> Result<Model> {
               _in.push('0');                         //     can push from the front..
               _in = _in.chars().rev().collect();     // then swop back. // todo : find pushn(0,'0')
             }
+//            truth_indexes = std::num::from_str_radix::<usize>(&_out, 2).unwrap();
             let idx = tt_full.binary_search(&_in).unwrap();
-            truth[idx] = true;
+            truth_table[idx] = true;
+            truth_idxs.push(idx);
           } else {
             panic!("Could not capture any inputs or outputs from truth-table")
           }
@@ -686,12 +717,13 @@ fn parse_blif_model(content: &str) -> Result<Model> {
           output: output,
           //      truth_table: truth.iter().map(|t| t.unwrap()).collect(),
           //      latched: false,
-          truth_table: truth,
+          truth_idxs : truth_idxs,
+          truth_table: truth_table,
         })
       } else if let Some(latch_line) = Captures::name(cap, "latch_line") {
-        println!("captured a latch : {:?}", latch_line.as_str());
+        debug_println!("captured a latch : {:?}", latch_line.as_str());
       } else if let Some(subskt_line) = Captures::name(cap, "subckt_line") {
-        println!("captured a subskt : {:?}", subskt_line.as_str());
+        debug_println!("captured a subskt : {:?}", subskt_line.as_str());
       } else {
         print!("Malformed blif - Could not parse line : >{}<", &primitive);
       }
@@ -702,7 +734,7 @@ fn parse_blif_model(content: &str) -> Result<Model> {
   Ok(model)
 }
 
-/// dont-care replacement
+/// dont-care replacement (text based)
 fn replace(vec: Vec<String>) -> Vec<String> {
   let mut new_lut = Vec::new();
   let mut done = 1;
