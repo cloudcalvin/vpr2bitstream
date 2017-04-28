@@ -97,6 +97,7 @@ pub struct Track{
 pub struct Route{
   pub tracks : Vec<Track>,
   pub sink : Option<Sink>,
+  pub from_opin : bool,
 }
 //todo change the Route into a tuple called route because the data is actually also route.
 //pub type Route = Vec<Track>;
@@ -258,6 +259,10 @@ pub enum FlowDir {
   Out
 }
 
+pub enum ClockMode{
+  Async,
+  Latched,
+}
 
 
 #[derive(Default, Debug, Builder)]
@@ -312,13 +317,31 @@ impl Tile{ //todo : move tile impl away from the other types. Make this file dec
     let (in_port,out_port) = (self.get_sw_blk_port(in_track),self.get_sw_blk_port(out_track)); // port mapping is a property of the tile.
 //    self.sw_blk.0[*SW_BLK_TYPE::get_switchblock_bit_index(in_port, out_port)] = true;
 //    let mut SwitchBlockBitstream(sw_blk_handle) = self.sw_blk;
+
     let ref mut sw_blk_handle = self.sw_blk.0;
-    sw_blk_handle[WiltonSwitchBlockBitstream::get_connection_bit_index(in_port, out_port)] = true;
+    let sw_blk_index = WiltonSwitchBlockBitstream::get_connection_bit_index(in_port, out_port);
+    route_println!("connecting port {} to port {} with SB index : {}",in_port,out_port,sw_blk_index);
+    sw_blk_handle[sw_blk_index] = true;
   }
 
   pub fn set_ble_at(&mut self, index: usize){
     self.ble[index as usize] = true; //remember this is setting true at the index. thus 001 means set to true at idx 0.
   }
+
+  pub fn set_ble_clk_mode(&mut self, mode : ClockMode){
+
+    match mode{
+      ClockMode::Async    => {
+        self.set_ble_at((*BLE_ADDR_SIZE + *BLE_CLK_OFFSET_LOCAL) as usize)
+        //should rather have it like this : 
+        // &self.ble[get slice of entire clk switch], then mask the bits setting the local mode
+      } ,
+      ClockMode::Latched  => {
+        self.set_ble_at((*BLE_ADDR_SIZE + *BLE_CLK_OFFSET_GLOBAL) as usize)        
+      }
+    }
+  }
+
 //  pub fn set_ble_binary(&mut self, value: usize){
 //    self.ble = value; //first need to convert the value to true's.
 //  }

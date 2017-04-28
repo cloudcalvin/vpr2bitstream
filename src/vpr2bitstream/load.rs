@@ -3,7 +3,9 @@ use vpr_extra::global::*;
 
 pub fn load_inputs(){
   // Gets a value for config if supplied by user, or defaults to "default.conf"
-  let user_config = (*MATCHES).value_of("config").unwrap_or("default.conf");
+  println!("Loading Input Files\n");
+
+  // let user_config = (*MATCHES).value_of("config").unwrap_or("default.conf");
 
   let vpr_name = match (*MATCHES).value_of("INPUT"){
     Some(matched) => matched.to_owned(),
@@ -36,11 +38,7 @@ pub fn load_inputs(){
   let mut route_file  = format!("{}{}",&route_in,".route");
   let mut bit_file    = format!("{}{}",&bit_out,".bs");
 
-  println!("VPR project name: {:?}", &vpr_name);
-  println!("Config file : {:?}", &user_config);
-  info_println!("Using blif file : {:?}", &blif_file);
-  info_println!("Using place file: {:?}", &place_file);
-  info_println!("Using route file: {:?}", &route_file);
+
 
   thread::spawn(move || {
     let mut config : MutexGuard<Config> = GL_CONFIG.lock().unwrap();

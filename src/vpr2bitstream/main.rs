@@ -44,11 +44,14 @@ lazy_static! {
 // Program Start
 /////////////////////////////////////////////////////////////////////////////////////////////////
 fn main() {
-
   // Program Initialisation
   init(&*YAML,load_inputs);
 
-
+  println!("VPR project name: {:?}",  &(*MODULE_NAME).as_str());
+  // info_println!("Config file : {:?}", &user_config);
+  info_println!("Using blif file : {:?}", &(*BLIF_FILE).as_str());
+  info_println!("Using place file: {:?}", &(*PLACE_FILE).as_str());
+  info_println!("Using route file: {:?}", &(*ROUTE_FILE).as_str());
 
   //Load the placement file into the Block matrix.
   let (N,netlist_file,arch_file,place) = match parse_place_file(Path::new((*PLACE_FILE).as_str())) {
@@ -111,18 +114,27 @@ fn main() {
           for b in &blif {
             println!("{:#?}",b);
           }
+          thread::spawn(move || {
+            GL_CONFIG.lock().unwrap().loglevel_blif = true;
+          }).join().expect("thread::spawn failed");
         },
         "p" | "place" => {
           println!("PLACEMENT FILE DATA: ");
           for p in place.iter() {
             println!("{:?}",p); //dont pretty print this.
           }
+           thread::spawn(move || {
+            GL_CONFIG.lock().unwrap().loglevel_place = true;
+          }).join().expect("thread::spawn failed");
         },
         "r" | "route" => {
           println!("ROUTING FILE DATA: ");
           for r in &nets {
             println!("{:#?}",r);
           }
+          thread::spawn(move || {
+            GL_CONFIG.lock().unwrap().loglevel_route = true;
+          }).join().expect("thread::spawn failed");
         },
         "s" | "stream" => {
           thread::spawn(move || {
@@ -142,12 +154,16 @@ fn main() {
   /////////////////////////////////////////////////////////////////////////////////////////////////
   thread::spawn(move || {
     let mut config : MutexGuard<Config> = GL_CONFIG.lock().unwrap();
-    config.arch_file        = arch_file;
-    config.fpga_width       = N+1;
-    config.channel_width    = 4; //set these from user config file
-    config.k_lut            = 3; //set these from user config file
-    config.grid_width       = 4; //set these from user config file
-    config.n_rail           = 2; //set these from user config file
+
+    config.arch_file                                      = arch_file;
+    config.fpga_width                                     = N+1;
+    config.channel_width                                  = 4; //set these from user config file
+    config.k_lut                                          = 3; //set these from user config file
+    config.grid_width                                     = 4; //set these from user config file
+    config.n_rail                                         = 2; //set these from user config file
+    config.ble_local_clk_en_index                         = 1; //set these from user config file
+    config.ble_global_clk_en_index                        = 0; //set these from user config file
+    config.ble_clk_en_size                                = 2;
   }).join().expect("thread::spawn failed");
 
 
@@ -171,9 +187,10 @@ fn main() {
         ble: Vec::new(),
       };
       tile.sw_blk.ref_mut().resize((3*4*(*CH_WIDTH)/2) as usize, false);
-      tile.con_blk_top.resize((4*(*CH_WIDTH)*(*N_RAIL)) as usize,false);
-      tile.con_blk_right.resize((4*(*CH_WIDTH)*(*N_RAIL)) as usize,false);
-      tile.ble.resize( 10 as usize,false);
+      tile.con_blk_top.resize((4*(*CH_WIDTH)*(*N_RAIL)) as usize, false);
+      tile.con_blk_right.resize((4*(*CH_WIDTH)*(*N_RAIL)) as usize, false);
+      tile.ble.resize( (*BLE_ADDR_SIZE + *BLE_CLK_CTRL_SIZE) as usize, false);
+      tile.set_ble_clk_mode(ClockMode::Async);
       y_row.push(tile);
 
     }

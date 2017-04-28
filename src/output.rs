@@ -21,7 +21,7 @@ pub fn output_to_blif<'a>(file_name : &str, models : &'a Vec<Model>) -> Result<(
   let mut file = File::create(&file_name)?;
   let mut out : String = String::new();
   for m in models{
-    // out.push_str(&format!("# Dual rail \"{}\" written by abc2dualrail on {}\n",m.name,time));
+    out.push_str(&format!("# Dual rail \"{}\" written by abc2dualrail on {}\n",m.name,"<todo: time>"));
     out.push_str(&format!(".model {}\n",m.name));
     out.push_str(&format!(".inputs "));
     for input in &m.inputs{
