@@ -103,35 +103,35 @@ use output::output_bitstream;
 ///    find the sw_blk port_nr for ref_track_nr and based on the output side of the SW-blk you have one of the
 ///
 ///  # Connection Block:
-///  PROG: {BOT_out, TOP_out, TOP_in}
-///  // prog_data = 16'b1101100111101111;
+///  PROG: {TOP_in, BOT_in, TOP_out, BOT_out}
+
 ///
-///  ```prog_data = 16'b1000_0110_1010;```
-///
-///  Wilton Switch Block:
-///  PROG : {BOT_out, TOP_out, TOP_in}
+///  Connection Switch Block:
+///  PROG : {}
 ///
 ///pub fn build_bitstream<'a>(nets: &'a Vec<Net>, blocks : &'a Vec<Vec<Block>>, tiles : &'a mut Vec<Vec<TileBuilder>>) -> Result<usize>{
 ///pub fn build_bitstream<'a>(nets: &'a Vec<NetLocal>, blocks : &'a Vec<Vec<Block>>, tiles : &'a mut Vec<Vec<Tile>>, places : &'a Vec<Placement>) {
 pub fn build_bitstream<'a>(tiles : &'a mut Vec<Vec<Tile>>, nets: &'a Vec<Net>, models : &'a Vec<Model>, place : &'a Placement) {
   //todo: go through all the models, and map the model logic to the placement data and store them together in block matrix or hashmap
-
   vv_bits_println!("\n\nRouting bitstream generation start");
+  
+  //bitstream for every net in nets.
   for net_enum in nets {
     if let &Net::Local(ref net) = net_enum{
       let branches : &Vec<Route> = net.route_tree.as_ref();
-      let first_track = &branches[0].tracks[0];
-      //
-      //  MAP SOURCE CONNECTION TO CHANNELS FOR EACH NET.
-      //
-      vv_bits_println!("Source to routing bitstream generation start");
-      build_bitstream_source_connections(tiles,&net.src,first_track);
+      // let first_track = &branches[0].tracks[0];
+
+      // //
+      // //  MAP SOURCE CONNECTION TO CHANNELS FOR EACH NET.
+      // //
+      // vv_bits_println!("Source to routing bitstream generation start");
+      // build_bitstream_source_connections(tiles,&net.src,first_track);
 
       //
       //  MAP TRACKS TO CHANNELS IN THE TILES ARRAY FOR EACH TRACK IN THE BRANCH.
       //
       vv_bits_println!("Sink to Routing bitstream generation start");
-      build_bitstream_routing_branches(tiles,branches);
+      build_bitstream_routing_branches(&net.src,tiles,branches);
     }else{
       vv_bits_println!("global net routing skipped");
     }
@@ -152,17 +152,26 @@ pub fn build_bitstream<'a>(tiles : &'a mut Vec<Vec<Tile>>, nets: &'a Vec<Net>, m
 ///
 ///
 ///
-fn build_bitstream_routing_branches<'a>(tiles : &'a mut Vec<Vec<Tile>>, branches :&Vec<Route>) {
+fn build_bitstream_routing_branches<'a>(source: &Source,tiles : &'a mut Vec<Vec<Tile>>, branches :&Vec<Route>) {
 
 
   for route in branches {
     let route : &Route = route;
     let tracks : &Vec<Track> = route.tracks.as_ref();
+
     for (i,track) in tracks.into_iter().enumerate() { // each track maps to either an Channel_X or a Channel_y
-      if i > 0{
+      if i == 0 {
+        //  MAP SOURCE CONNECTION TO NEXT TRACK      
+        if route.from_opin{
+          vv_bits_println!("Source to routing bitstream generation start");
+          build_bitstream_source_connections(tiles,source,track);
+        }
+      }else{
+        route_println!("\n({},{})\nSwitchblock connection \n from track \n>\n{:#?}\n< \nto track\n >\n{:#?}< \n", (source.0).0, (source.0).1, &tracks.get(i-1),&track);
         build_bitstream_routing_switch(tiles, &track, &tracks.get(i-1).unwrap());                   // todo : what happens if there is none? or i==0?
-      }                                                                                             // todo, better provision the iteration to be done in pairs.
+      }                                                                                          // todo, better provision the iteration to be done in pairs.
     }
+
     vv_bits_println!("finished generating routing bitstreams");
 
     let prev_track : &Track = tracks.last().unwrap();
@@ -178,35 +187,39 @@ fn build_bitstream_routing_branches<'a>(tiles : &'a mut Vec<Vec<Tile>>, branches
 /// 'in_port' and 'out_port' in this context refers to the port number of the switch block as defined
 /// in clockwise manner.
 ///
+/// **1 :
+///       
 ///
 fn build_bitstream_routing_switch<'a>(tiles : &'a mut Vec<Vec<Tile>>, this_track : &Track,  prev_track : &Track){
 
-  vv_bits_println!("\n\nStarting routing bitstreams generation");
-  vv_bits_println!("since this_track.nr%2 = {}, ",this_track.nr%2);
 
   let (t_x,t_y) =  (this_track.xy.0 as usize, this_track.xy.1 as usize);
-  let (p_x,p_y) = (prev_track.xy.0 as usize, prev_track.xy.1 as usize);
+  let (p_x,p_y) =  (prev_track.xy.0 as usize, prev_track.xy.1 as usize);
 
   let (sw_blk_x,sw_blk_y) = if this_track.nr%2 == 0{ //up and right are true for even numbers.
-    vv_bits_println!(" the output track is flowing up or right");
-
+    route_println!(" the output track is flowing up or right");
+    //see **1
     if prev_track.nr%2 == 1 {
+    route_println!("input track is flowing down/left ");
+      
       use types::XY::*;
       match (&prev_track.orientation,&this_track.orientation){
-        (&X,&Y) => (p_x, t_y),
-        (&Y,&X) => (t_x, p_y),
+        (&X,&Y) => (t_x, p_y),
+        (&Y,&X) => (p_x, t_y),
         _ => unreachable!()
       }
     }else{
+      route_println!("input track is flowing up/right ");
       (p_x,p_y)
     }
 
   }else{
-    vv_bits_println!(" the output track is flowing down or left");
+    route_println!(" the output track is flowing down or left");
     (t_x,t_y)
   };
+  route_println!("switch block xy has been determined to be : {:?}",(sw_blk_x,sw_blk_y));
+  
 
-//  vv_println!("connecting track \n>\n{:#?}\n< and track >\n{:#?}\n<",prev_track,this_track);
 
   let ref mut tile : &mut Tile = &mut tiles[sw_blk_y][sw_blk_x]; //get the tile where the sw-blk is located.
 
@@ -436,7 +449,7 @@ fn build_bitstream_sink_to_pad<'a>(tiles : &'a mut Vec<Vec<Tile>>,sink: &Sink, t
       bits_println!("connecting bottom pad to CB on tile  with index : {}", &(*CB_BOT_OUT_IDX) + track.nr);
       bits_println!("  BOTTOM edge : {:?}",sink.0);
       tile.set_top_con_blk_at(((*CB_BOT_OUT_IDX) + track.nr) as usize);  // 'bot_in' (bot)
-      tile.set_ble_at(1 as usize); //'001' -> tt==00000010 which is '1' at idx 1.
+      tile.set_ble_at(4 as usize); //'001' -> tt==00000010 which is '1' at idx 1.
     },
     Side::Left => {
       bits_println!("connecting left pad to CB on tile  with index : {}", &(*CB_BOT_OUT_IDX) + track.nr);
