@@ -234,12 +234,12 @@ pub fn parse_route_file<P: AsRef<Path>>(file_path: P) -> Result<(u16, Vec<Net>)>
   //split file into header vs data
   let (header, data) = {
     let mut parts = RE_net_seperator.split(&contents);
-    let h = parts.next().ok_or("Malformed .route file").unwrap();
+    let h = parts.next().ok_or("Malformed .route file : Unable to split file into nets.").unwrap();
     (h, parts)
   };
 
   //Parse header
-  let header_line = header.lines().next().ok_or("Malformed .route file").unwrap(); //is making it an iterator when only need the first line more/less costly? probably more.
+  let header_line = header.lines().next().ok_or("Malformed .route file : No Header found.").unwrap(); //is making it an iterator when only need the first line more/less costly? probably more.
   let captured: Option<Captures> = RE_file_header_array_size.captures(&header_line);
   match captured {
     Some(ref cap) => {
@@ -247,7 +247,7 @@ pub fn parse_route_file<P: AsRef<Path>>(file_path: P) -> Result<(u16, Vec<Net>)>
           .ok_or::<Error>("No array size specified in .place file.".into()));
       n = array_size.as_str().parse::<u16>()?;
     },
-    _ => println!("Malformed .parse file")
+    _ => println!("Malformed .route file")
   }
 
 
@@ -309,10 +309,11 @@ fn parse_net(text: &str) -> Result<Net> {
     //net is a global net..  so dont call parse node.. call parse globals
     println!("skipping global net");
     Ok(Net::Global(NetGlobal))
+
   } else {
     // the first two lines describe the source
     let src = body.next().ok_or::<Error>("Malformed .route file: Missing SOURCE node".into())?;
-    let src_pin = body.next().ok_or::<Error>("Malformed .route file: missing IPIN node".into())?;
+    let src_pin = body.next().ok_or::<Error>("Malformed .route file: missing first OPIN node".into())?;
     let src_data : Node = parse_node(src)?;
     let pin_data : Node = parse_node(src_pin)?;
 
@@ -320,6 +321,7 @@ fn parse_net(text: &str) -> Result<Net> {
     let mut route_tree = RouteTree::new();
     //the rest of the nodes are channels(tracks actually) and (IPin+Sink)'s
     let mut new_route = true;
+    let mut opin_found = true;
 
     while let Some(node) = body.next() {
       let parse_result = parse_node(node);
@@ -347,13 +349,17 @@ fn parse_net(text: &str) -> Result<Net> {
                   orientation: orientation,
                   //            track: (),
                 };
+                //if a sink was found, push a new Vec to the route tree;
                 if new_route {
                   new_route = false;
                   route_tree.push(Route {
                     tracks: Vec::new(),
+                    from_opin: opin_found,
                     sink: None,
                   });
                 }
+                opin_found = false;
+                //if a sink was found, the 'last_mut' will get the latest route tree.
                 let route = route_tree.last_mut().unwrap();
                 route.tracks.push(track);
                 Ok::<(), Error>(())
@@ -363,6 +369,8 @@ fn parse_net(text: &str) -> Result<Net> {
               info_println!("Ignoring secondary OPIN nodes found in net : \
                   {} {} {:?} {} with the SOURCE OPIN at {:?} {}",
                        node_nr, &"OPIN", xy, meta_nr, src_data.xy, pin_data.meta_nr);
+              // route.opins.push()
+              opin_found = true;
               Ok::<(), Error>(())
             }
 
@@ -546,12 +554,12 @@ pub fn parse_blif_file<'a, P: AsRef<Path>>(file_path: P) -> Result<Vec<Model>> {
   //split file into header vs data
   let (header, body) = {
     let mut parts = RE_split_on_model.split(&contents);
-    let h = parts.next().ok_or("Malformed .route file").unwrap();
+    let h = parts.next().ok_or("Malformed .blif file").unwrap();
     (h, parts)
   };
 
   //Parse header
-  let header_line = header.lines().next().ok_or("Malformed .route file").unwrap(); //is making it an iterator when only need the first line more/less costly? probably more.
+  let header_line = header.lines().next().ok_or("Malformed .blif file").unwrap(); //is making it an iterator when only need the first line more/less costly? probably more.
   //  let captured: Option<Captures> = RE_blif_header.captures(&header_line);
   //  match captured {
   //    Some(ref cap) => {
