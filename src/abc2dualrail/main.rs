@@ -102,7 +102,7 @@ fn main() {
   
   let blif_out = match (*MATCHES).value_of("output") {
     Some(blif) => blif.to_owned(), //test if it exists.
-    None => String::from(&*MODULE_NAME.as_str()) + ".abc.full.blif" // or dual.blif
+    None => String::from(&*MODULE_NAME.as_str()) + ".abc.dual.blif" // or dual.blif
   };
   
   // connect unconnected input ports
