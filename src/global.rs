@@ -18,6 +18,8 @@ pub struct Config {
   pub loglevel_warn: bool,
   pub loglevel_debug: bool,
   pub loglevel_blif: bool,
+  pub loglevel_route: bool,
+  pub loglevel_place: bool,
   pub loglevel_bitstream: bool,
   pub arg_matches: ArgMatches<'static>,
   pub blif_file: String,
@@ -31,6 +33,9 @@ pub struct Config {
   pub fpga_width: u16,
   pub n_rail: u16,
   pub k_lut: u16,
+  pub ble_clk_en_size: u16,
+  pub ble_local_clk_en_index : u16,
+  pub ble_global_clk_en_index :u16,
   //  pub switchblock_type : Arc<Box<SwitchBlock + 'static>>
   //  pub switchblock_type : &'static SwitchBlock
 }
@@ -46,6 +51,8 @@ lazy_static! {
   pub static ref WARN                       : bool                = GL_CONFIG.lock().unwrap().loglevel_warn;
   pub static ref DEBUG                      : bool                = GL_CONFIG.lock().unwrap().loglevel_debug;
   pub static ref BLIF_DEBUG                 : bool                = GL_CONFIG.lock().unwrap().loglevel_blif;
+  pub static ref ROUTE_DEBUG                : bool                = GL_CONFIG.lock().unwrap().loglevel_route;
+  pub static ref PLACE_DEBUG                : bool                = GL_CONFIG.lock().unwrap().loglevel_place;
   pub static ref BITSTREAM                  : bool                = GL_CONFIG.lock().unwrap().loglevel_bitstream;
 
 
@@ -68,6 +75,7 @@ lazy_static! {
   pub static ref N_TRACKS                   : u16                 = GL_CONFIG.lock().unwrap().channel_width;
   pub static ref CH_WIDTH                   : u16                 = GL_CONFIG.lock().unwrap().channel_width;
   pub static ref CH_MAX                     : u16                 = (*CH_WIDTH) - 1;
+  
   pub static ref CB_TOP_IN_IDX              : u16                 = (*CH_WIDTH) * 3;
   pub static ref CB_BOT_IN_IDX              : u16                 = (*CH_WIDTH) * 2;
   pub static ref CB_TOP_OUT_IDX             : u16                 = (*CH_WIDTH);
@@ -79,11 +87,23 @@ lazy_static! {
   pub static ref SB_BOT_IDX                 : u16                 = (*CH_WIDTH);
   pub static ref SB_RIGHT_IDX               : u16                 = 0;
 
-
 //  pub static ref SW_BLK_ENUM_TYPE           : SwitchBlockType = GL_CONFIG.lock().unwrap().switchblock_type;
 //  pub static ref SW_BLK_TYPE                : SwitchBlockBitstream = GL_CONFIG.lock().unwrap().switchblock_type;
 //  pub static ref SW_BLK_TYPE                : SwitchBlockBitstream = SwitchBlockType::get_struct((*SW_BLK_TYPE));
 //  pub static ref SW_BLK_TYPE                : &'static SwitchBlockBitstream = &WiltonSwitchBlockBitstream;
+
+  // pub static ref BLE_ADDR_SIZE              : u16                 = (2 as u16).pow(*K_LUT as u32);
+  // pub static ref BLE_CLK_CTRL_SIZE          : u16                 = GL_CONFIG.lock().unwrap().ble_clk_en_size;
+
+  // pub static ref BLE_CLK_OFFSET_LOCAL       : u16                 = GL_CONFIG.lock().unwrap().ble_local_clk_en_index;
+  // pub static ref BLE_CLK_OFFSET_GLOBAL      : u16                 = GL_CONFIG.lock().unwrap().ble_global_clk_en_index;
+}
+lazy_static!{
+  pub static ref BLE_ADDR_SIZE              : u16                 = 2u16.pow(*K_LUT as u32);
+  pub static ref BLE_CLK_CTRL_SIZE          : u16                 = GL_CONFIG.lock().unwrap().ble_clk_en_size;
+
+  pub static ref BLE_CLK_OFFSET_LOCAL       : u16                 = GL_CONFIG.lock().unwrap().ble_local_clk_en_index;
+  pub static ref BLE_CLK_OFFSET_GLOBAL      : u16                 = GL_CONFIG.lock().unwrap().ble_global_clk_en_index;
 
 }
 
