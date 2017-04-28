@@ -40,3 +40,16 @@ macro_rules! vv_blif_println {
     ($fmt:expr) => (if *BLIF_DEBUG & *DEBUG {print!(concat!($fmt, "\n"))});
     ($fmt:expr, $($arg:tt)*) => (if *BLIF_DEBUG & *DEBUG {print!(concat!($fmt, "\n"), $($arg)*)});
 }
+
+#[macro_export]
+macro_rules! route_println {
+    () => (if *ROUTE_DEBUG | *INFO {print!("\n")});
+    ($fmt:expr) => (if *ROUTE_DEBUG | *INFO {print!(concat!($fmt, "\n"))});
+    ($fmt:expr, $($arg:tt)*) => (if *ROUTE_DEBUG | *INFO {print!(concat!($fmt, "\n"), $($arg)*)});
+}
+#[macro_export]
+macro_rules! vv_route_println {
+    () => (if *ROUTE_DEBUG & *INFO | *DEBUG {print!("\n")});
+    ($fmt:expr) => (if *ROUTE_DEBUG & *INFO | *DEBUG {print!(concat!($fmt, "\n"))});
+    ($fmt:expr, $($arg:tt)*) => (if *ROUTE_DEBUG & *INFO | *DEBUG {print!(concat!($fmt, "\n"), $($arg)*)});
+}
