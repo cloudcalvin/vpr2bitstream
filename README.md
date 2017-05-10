@@ -1,6 +1,6 @@
 
 settings (coordinate system (vpr-style == cartesian))
-read file ( .place )
+read file (``` .place ```)
   place file consists of:
     file name
     array size
@@ -8,7 +8,7 @@ read file ( .place )
     header
     placement-data
 
-read file ( .route )
+read file (``` .route ```)
 
   route file consists of:
     array size
@@ -23,7 +23,7 @@ read file (.pre-vpr.blif)
   2) inputs port names
   3) output port names
   4) .names :
-    .name nInputs output
+    ```.name nInputs output```
   5) .end
 
 
@@ -37,13 +37,13 @@ read file (.pre-vpr.blif)
 
  1 ) read blif. build out configurations.
  2 ) get placement details.
- 3 ) read .route
+ 3 ) read ```.route```
  4 ) mangle routing
 
 
 
 VPR coordinates with which it labels blks and routing : 
-
+```
   y
   ^
   |
@@ -52,15 +52,15 @@ VPR coordinates with which it labels blks and routing :
   |
   o ---------->x
 (0,0)       (1,0)
-
+```
 MY SFPGA is defined array based and thus 
-
+```
 (0,0)  -> (0,1)
  |
 \|/
 (1,0)  -> (1,1)
 
-
+```
 
 
 0) read placement and create blocks and channels and tiles with proper 'array size'.
@@ -69,9 +69,10 @@ MY SFPGA is defined array based and thus
 3) add the blif data to the right tiles.
 4) give each tile an x,y and a row columm. Create the bitstream from the correct connections and blif data.
 5) rearrange the tiles according to row,col and flatten row major.
-
+```
  let ch : ChannelEx = ChannelExBuilder::default()
      .special_info(42u8)
      .token(19124)
      .build()
      .unwrap();
+```
