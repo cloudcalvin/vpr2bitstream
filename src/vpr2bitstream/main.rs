@@ -236,17 +236,17 @@ fn main() {
   println!("Output bitstream");
   output_bitstream(&tiles).expect("Could not create bit stream file : {}");
 
+  if let Some(mapping_file) = (*MATCHES).values_of("port_map") {
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+    //Output FPGA pad mapping (Actually pad mapping can be read by PERL and can find&replace template values.)
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+    // println!("Output bitstream");
+    // output_bitstream(&tiles).expect("Could not create bit stream file : {}");
+    for model in blif {
+      //create file
+      //output port to grid location mapping;
 
-  /////////////////////////////////////////////////////////////////////////////////////////////////
-  //Output FPGA pad mapping (Actually pad mapping can be read by PERL and can find&replace template values.)
-  /////////////////////////////////////////////////////////////////////////////////////////////////
-  // println!("Output bitstream");
-  // output_bitstream(&tiles).expect("Could not create bit stream file : {}");
-  for model in blif {
-    //create file
-    //output port to grid location mapping;
-     
-  } 
-
+    } 
+  }
 
 }

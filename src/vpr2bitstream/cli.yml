@@ -44,6 +44,12 @@ args:
         value_name: FILE
         takes_value: true
         help: Sets the .route file to use
+    - map:
+        short: m
+        long: map
+        value_name: FILE
+        takes_value: true
+        help: Sets the file to output the port mapping to. 
 #
 #subcommands:
 #    - test:
