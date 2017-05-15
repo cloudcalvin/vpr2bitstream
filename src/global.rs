@@ -6,6 +6,8 @@ use types::*;
 pub use std::thread;
 pub use std::sync::{Mutex,MutexGuard};
 
+use std::path::{Path, PathBuf};
+
 use clap::{App, ArgMatches, YamlLoader};
 
 use yaml_rust::yaml::Yaml;
@@ -22,11 +24,14 @@ pub struct Config {
   pub loglevel_place: bool,
   pub loglevel_bitstream: bool,
   pub arg_matches: ArgMatches<'static>,
+  pub output_path: Option<PathBuf>,
+  // pub output_path: String,
   pub blif_file: String,
   pub route_file: String,
   pub place_file: String,
   pub arch_file: String,
   pub bit_file: String,
+  pub port_map_file: String,
   pub module_name: String,
   pub channel_width: u16,
   pub grid_width: u16,
@@ -61,10 +66,20 @@ lazy_static! {
   pub static ref MATCHES                    : ArgMatches<'static> = GL_CONFIG.lock().unwrap().arg_matches.clone();
 
   pub static ref MODULE_NAME                : String              = GL_CONFIG.lock().unwrap().module_name.clone();
+  pub static ref OUTPUT_PATH                : PathBuf             = GL_CONFIG.lock().unwrap().output_path.clone().unwrap();
   pub static ref BLIF_FILE                  : String              = GL_CONFIG.lock().unwrap().blif_file.clone();
   pub static ref ROUTE_FILE                 : String              = GL_CONFIG.lock().unwrap().route_file.clone();
   pub static ref PLACE_FILE                 : String              = GL_CONFIG.lock().unwrap().place_file.clone();
   pub static ref BIT_FILE                   : String              = GL_CONFIG.lock().unwrap().bit_file.clone();
+}
+
+
+lazy_static!{
+  pub static ref BLE_ADDR_SIZE              : u16                 = 2u16.pow(*K_LUT as u32);
+  pub static ref BLE_CLK_CTRL_SIZE          : u16                 = GL_CONFIG.lock().unwrap().ble_clk_en_size;
+
+  pub static ref BLE_CLK_OFFSET_LOCAL       : u16                 = GL_CONFIG.lock().unwrap().ble_local_clk_en_index;
+  pub static ref BLE_CLK_OFFSET_GLOBAL      : u16                 = GL_CONFIG.lock().unwrap().ble_global_clk_en_index;
 
   pub static ref N_RAIL                     : u16                 = GL_CONFIG.lock().unwrap().n_rail;
   pub static ref K_LUT                      : u16                 = GL_CONFIG.lock().unwrap().k_lut;
@@ -75,7 +90,12 @@ lazy_static! {
   pub static ref N_TRACKS                   : u16                 = GL_CONFIG.lock().unwrap().channel_width;
   pub static ref CH_WIDTH                   : u16                 = GL_CONFIG.lock().unwrap().channel_width;
   pub static ref CH_MAX                     : u16                 = (*CH_WIDTH) - 1;
-  
+
+  pub static ref FPGA_TOP_IDX               : u16                 = (*N_TILES) * 3;
+  pub static ref FPGA_LEFT_IDX              : u16                 = (*N_TILES) * 2;
+  pub static ref FPGA_BOT_IDX               : u16                 = (*N_TILES);
+  pub static ref FPGA_RIGHT_IDX             : u16                 = 0;
+
   pub static ref CB_TOP_IN_IDX              : u16                 = (*CH_WIDTH) * 3;
   pub static ref CB_BOT_IN_IDX              : u16                 = (*CH_WIDTH) * 2;
   pub static ref CB_TOP_OUT_IDX             : u16                 = (*CH_WIDTH);
@@ -87,6 +107,7 @@ lazy_static! {
   pub static ref SB_BOT_IDX                 : u16                 = (*CH_WIDTH);
   pub static ref SB_RIGHT_IDX               : u16                 = 0;
 
+
 //  pub static ref SW_BLK_ENUM_TYPE           : SwitchBlockType = GL_CONFIG.lock().unwrap().switchblock_type;
 //  pub static ref SW_BLK_TYPE                : SwitchBlockBitstream = GL_CONFIG.lock().unwrap().switchblock_type;
 //  pub static ref SW_BLK_TYPE                : SwitchBlockBitstream = SwitchBlockType::get_struct((*SW_BLK_TYPE));
@@ -97,13 +118,6 @@ lazy_static! {
 
   // pub static ref BLE_CLK_OFFSET_LOCAL       : u16                 = GL_CONFIG.lock().unwrap().ble_local_clk_en_index;
   // pub static ref BLE_CLK_OFFSET_GLOBAL      : u16                 = GL_CONFIG.lock().unwrap().ble_global_clk_en_index;
-}
-lazy_static!{
-  pub static ref BLE_ADDR_SIZE              : u16                 = 2u16.pow(*K_LUT as u32);
-  pub static ref BLE_CLK_CTRL_SIZE          : u16                 = GL_CONFIG.lock().unwrap().ble_clk_en_size;
-
-  pub static ref BLE_CLK_OFFSET_LOCAL       : u16                 = GL_CONFIG.lock().unwrap().ble_local_clk_en_index;
-  pub static ref BLE_CLK_OFFSET_GLOBAL      : u16                 = GL_CONFIG.lock().unwrap().ble_global_clk_en_index;
 
 }
 

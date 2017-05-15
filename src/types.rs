@@ -9,6 +9,9 @@ use std::borrow::Cow;
 pub use na::{Vector3, Rotation3};
 pub use na::{Dynamic, MatrixArray, MatrixVec, DMatrix};
 
+pub use regex::{Regex, Captures, RegexSet};
+
+
 use self::PortFlow::*;
 use types::XY::*;
 
@@ -74,7 +77,37 @@ pub struct Source(pub Point,pub NodeMetaType, pub ClassOrPad,pub PinOrPad);
 pub struct Sink(pub Point, pub NodeMetaType, pub ClassOrPad, pub PinOrPad);
 
 
+// #[derive(Default,Clone,Debug,PartialEq)]
+pub struct TileGrid(Vec<Vec<Tile>>);
 
+impl TileGrid{
+  pub fn try_get_port_index(p : &Point) -> Option<u16>{
+    // let &Point(x,y) = p;
+    let edges = Block::try_get_edges(&p);
+      //0 starts from the top
+      // p is a cartesian point thus it has y starting from the bottom. 
+    if !edges.is_empty(){
+      let port_number = match *edges.first().unwrap().as_ref().unwrap(){
+        Side::Right => { 
+          Some(*FPGA_BOT_IDX - p.1 as u16)
+        },
+        Side::Bottom => {
+          Some(*FPGA_LEFT_IDX - p.0 as u16)
+        },
+        Side::Left => {
+          Some(*FPGA_LEFT_IDX + p.1 as u16)      
+        },
+        Side::Top => {
+          Some(*FPGA_TOP_IDX + p.0 as u16)  
+        }
+      };
+      port_number
+    }else{
+      None
+    }
+    
+  }
+}
 
 pub trait Positionable{
 
@@ -183,7 +216,6 @@ impl LogicBlock{
 //  DontCare
 //}
 
-
 #[derive(Debug)]
 pub struct Model{
   pub name: String,
@@ -191,6 +223,32 @@ pub struct Model{
   pub outputs : Vec<String>,
   pub latched : Vec<String>,
   pub logic : Vec<LogicBlock>,
+}
+
+impl Model{
+  pub fn trim_port(mangled_port_name: &String) -> Option<String>{
+    println!("mangled_port_name: {}",mangled_port_name);
+    if let Some(ref cap) = Regex::new(r"top\^(?P<name>[[:alnum:]]*?)~(?P<index>\d+)").unwrap().captures(&mangled_port_name){
+      println!("tilde captured");
+      let port_name = Captures::name(cap, "name")
+        .expect(&format!("Unsupported port naming format in BLIF file ({})",&mangled_port_name))
+        .as_str();
+      let index = Captures::name(cap, "index")
+        .expect(&format!("Unsupported port naming format in BLIF file ({})",&mangled_port_name))
+        .as_str();
+      println!("captured : {}",(&format!("{}[{}]",port_name,index)));
+      Some(format!("{}[{}]",port_name,index))
+    }else if let Some(ref cap) = Regex::new(r"top\^(?P<name>[[:alnum:]]*)").unwrap().captures(&mangled_port_name){
+      let port_name = Captures::name(cap, "name")
+        .expect(&format!("Unsupported port naming format in BLIF file ({})",&mangled_port_name))
+        .as_str();
+      println!("captured : {}",(&format!("{}",port_name)));          
+      Some(format!("{}",port_name))
+    }else{
+      println!("could not capture");
+      None
+    }
+  }
 }
 
 // NOTE : the blocks are stored with xy coords as received from VTR.
@@ -211,6 +269,10 @@ impl Block{
 
 //  pub fn try_get_edges(p : &Point) -> Cow<Vec<Option<Side>>> {
 
+
+  /*
+  * Tests a point to see which side of the FPGA it lies on, if any. 
+  */
   pub fn try_get_edges(p : &Point) -> Vec<Option<Side>> {
     let &Point(x,y) = p;
     let mut sides = Vec::new();
@@ -265,6 +327,7 @@ pub enum ClockMode{
 }
 
 
+
 #[derive(Default, Debug, Builder)]
 //#[builder(pattern="immutable")]
 pub struct Tile{
@@ -305,12 +368,12 @@ impl Tile{ //todo : move tile impl away from the other types. Make this file dec
 //    sides
 //  }
 
-  pub fn connect_track_to_sink(&self, track : &Track){
+  // pub fn connect_track_to_sink(&self, track : &Track){
 
-  }
-  pub fn connect_source_to_track(&self, track : &Track){
+  // }
+  // pub fn connect_source_to_track(&self, track : &Track){
 
-  }
+  // }
 
   pub fn connect_tracks(&mut self, in_track : &Track, out_track: &Track){
     //only sets to true. never to false?

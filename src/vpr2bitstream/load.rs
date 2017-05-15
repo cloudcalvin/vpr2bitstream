@@ -1,5 +1,8 @@
 
 use vpr_extra::global::*;
+// use std::path::Path;
+use std::process;
+use std::path::{Path, PathBuf};
 
 pub fn load_inputs(){
   // Gets a value for config if supplied by user, or defaults to "default.conf"
@@ -11,12 +14,28 @@ pub fn load_inputs(){
     Some(matched) => matched.to_owned(),
     None          => String::from("none")
   };
+  // thread::spawn(move || {
+
+  let input_file = format!("{}", vpr_name.to_owned() + ".v");
+  println!("Input File: {}", &input_file);
+
+  let input_path = PathBuf::from(input_file);
+
+  if !input_path.exists(){
+    panic!("No Verilog input file found ({}).", vpr_name.to_owned() + ".v");
+  }
+
+  println!("parent : {:?}", Path::parent(&input_path));
+  let output_path = match Path::parent(&input_path){
+    Some(path) => PathBuf::from(path),
+    None => panic!("could not parse ({:?}).",&input_path)
+  };
+  
 
   let blif_in = match (*MATCHES).value_of("blif"){
     Some(matched) => matched.to_owned(),
     None          => vpr_name.to_owned()
   };
-
 
   let route_in = match (*MATCHES).value_of("route"){
     Some(matched) => matched.to_owned(),
@@ -43,6 +62,7 @@ pub fn load_inputs(){
   thread::spawn(move || {
     let mut config : MutexGuard<Config> = GL_CONFIG.lock().unwrap();
     config.module_name  = vpr_name;
+    config.output_path  = Some(output_path.to_owned());
     config.blif_file    = blif_file;
     config.place_file   = place_file;
     config.route_file   = route_file;

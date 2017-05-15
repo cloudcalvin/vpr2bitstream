@@ -47,8 +47,7 @@ args:
     - map:
         short: m
         long: map
-        value_name: FILE
-        takes_value: true
+        takes_value: false
         help: Sets the file to output the port mapping to. 
 #
 #subcommands:

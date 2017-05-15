@@ -137,18 +137,21 @@ pub fn parse_place_file<P: AsRef<Path>>(file_path: P) -> Result<(u16, String, St
     };
   }
 
-  // //Initialise block matrix. //todo : use ndarray.
-  // for y in 0..n {
-  //   let mut y_row : Vec<BlockBuilder> = Vec::with_capacity(n as usize);
-  //   for x in 0..n {
-  //     let mut block = BlockBuilder::default();
-  //     block.xy(Point(x,y));
-  //     y_row.push(block.clone())
-  //   }
-  //   blocks.push(y_row);
-  // };
-  // Parse Body
-  //  let mut lines_zip_iter = lines_zipped.iter();
+  /*
+  * Initialise block matrix. //todo : use ndarray.
+  * for y in 0..n {
+  *   let mut y_row : Vec<BlockBuilder> = Vec::with_capacity(n as usize);
+  *   for x in 0..n {
+  *     let mut block = BlockBuilder::default();
+  *     block.xy(Point(x,y));
+  *     y_row.push(block.clone())
+  *   }
+  *   blocks.push(y_row);
+  * };
+  * Parse Body
+  *  let mut lines_zip_iter = lines_zipped.iter();
+  *
+  */
   while let Some(&(idx, ref line)) = lines_zip_iter.next() {
     //    if idx >= 5 {
     let captured: Option<Captures> = PLACE_FILE_REGEX_data_lines.captures(line); //captures, executes the regex query defined in 'util.rs'
@@ -174,7 +177,7 @@ pub fn parse_place_file<P: AsRef<Path>>(file_path: P) -> Result<(u16, String, St
         placement.insert(String::from(name.as_str()), Point(x.clone(), y.clone()));
         //          println!("{:#?}",(String::from(name.as_str()),Point(x.clone(),y.clone())));
       }
-      None => info_println!("skipping BLIF lines : >{}<", &line)
+      None => info_println!("skipping .place file lines : >{}<", &line) 
     }
     //    }else{
     //      break
@@ -616,6 +619,8 @@ fn parse_blif_model(content: &str) -> Result<Model> {
     }
     let model_name_line = model_parts.next().ok_or("Malformed blif file : Incorrect model header.").unwrap();
     let inputs = model_parts.next().ok_or("Malformed blif file : Incorrect model header.").unwrap();
+    println!("inputs : {}",inputs);
+    println!("trimmed: {}",inputs.trim());
     let outputs = model_parts.next().ok_or("Malformed blif file : Incorrect model header.").unwrap();
 
     let model_name = Regex::new(r"(?P<name>[[:graph:]]+)\s*\n").unwrap().captures(model_name_line).unwrap().name("name").unwrap();

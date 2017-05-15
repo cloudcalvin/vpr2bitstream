@@ -47,6 +47,20 @@ fn main() {
   // Program Initialisation
   init(&*YAML,load_inputs);
 
+  // let input_path_name = format!("{}", *(MODULE_NAME).to_owned() + ".v");
+
+  // let input_path = Path::new(&input_path_name);
+
+  // // if !input_path.exists(){
+  // //   panic!("No Verilog input file found ({}).", vpr_name.to_owned() + ".v");
+  // // }
+
+  // let output_path = match Path::parent(&input_path){
+  //   Some(path) => path,
+  //   None => panic!("could not parse ({:?}).",&input_path)
+  // };
+
+
   println!("VPR project name: {:?}",  &(*MODULE_NAME).as_str());
   // info_println!("Config file : {:?}", &user_config);
   info_println!("Using blif file : {:?}", &(*BLIF_FILE).as_str());
@@ -236,17 +250,16 @@ fn main() {
   println!("Output bitstream");
   output_bitstream(&tiles).expect("Could not create bit stream file : {}");
 
-  if let Some(mapping_file) = (*MATCHES).values_of("port_map") {
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-    //Output FPGA pad mapping (Actually pad mapping can be read by PERL and can find&replace template values.)
-    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////
+  //Output FPGA pad mapping (Actually pad mapping can be read by PERL and can find&replace template values.)
+  /////////////////////////////////////////////////////////////////////////////////////////////////
+  if let Some(mapping_file) = (*MATCHES).values_of("map") {
+    println!("Port map files enabled.");
     // println!("Output bitstream");
     // output_bitstream(&tiles).expect("Could not create bit stream file : {}");
-    for model in blif {
-      //create file
-      //output port to grid location mapping;
-
-    } 
+    output_port_map(&blif,&place).expect("Could not create port map file : {}")
   }
 
 }
