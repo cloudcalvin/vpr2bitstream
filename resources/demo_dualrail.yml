@@ -1,0 +1,22 @@
+---
+simulation:
+  name: demo_bitsream_generation
+  top_module: fpga_k3_N1_uniform_dualrail_adp2
+  output_dir: ./demo_results/dualrail.ble3
+  # temp_dir: dualrail.ble3
+  options: 
+    - "-sv ./*"
+  arguments: 
+    run_vtr_experiment:
+      - "-latest"
+      - "vtr_display on"
+      - "-vv"
+      - "-temp_dir /results"
+  circuits: 
+    - resources/benchmarks/add8.v
+    # - add8r.v
+    # - mul8.v
+  architectures:
+    - resources/K3.xml
+  test_template: /home/userd/Documents/Personal/Projects/Degree_Projects/MEng_SFPGA_2016/fpga/simulation/src/verilog/src/tb_template_k3_N1_uniform_dualrail_adp2.v #used for PAD numbering
+...
