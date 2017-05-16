@@ -115,7 +115,7 @@ pub fn output_port_map<'a>(models : &'a Vec<Model>, place : &Placement ) -> Resu
     for port in &model.inputs {
       let point = place.get(port).expect(&format!("could not find port ({})",port));
       if let Some(edge_port_index) = TileGrid::try_get_port_index(&point){        
-        string.push_str(format!("{},{}\n",Model::trim_port(port).unwrap(),edge_port_index).as_str());
+        string.push_str(format!("{},pad {}\n",Model::trim_port(port).unwrap(),edge_port_index).as_str());
       }
     }
     
@@ -125,7 +125,7 @@ pub fn output_port_map<'a>(models : &'a Vec<Model>, place : &Placement ) -> Resu
       if let Some(edge_port_index) = TileGrid::try_get_port_index(&point){
         println!("Output port : {}",port);
         
-        string.push_str(format!("{},{}\n",edge_port_index,Model::trim_port(port).unwrap()).as_str());
+        string.push_str(format!("pad {},{}\n",edge_port_index,Model::trim_port(port).unwrap()).as_str());
       }
     }
 
