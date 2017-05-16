@@ -619,16 +619,14 @@ fn parse_blif_model(content: &str) -> Result<Model> {
     }
     let model_name_line = model_parts.next().ok_or("Malformed blif file : Incorrect model header.").unwrap();
     let inputs = model_parts.next().ok_or("Malformed blif file : Incorrect model header.").unwrap();
-    println!("inputs : {}",inputs);
-    println!("trimmed: {}",inputs.trim());
     let outputs = model_parts.next().ok_or("Malformed blif file : Incorrect model header.").unwrap();
 
     let model_name = Regex::new(r"(?P<name>[[:graph:]]+)\s*\n").unwrap().captures(model_name_line).unwrap().name("name").unwrap();
     //setup model without the LUT data.
     let model_struct = Model {
       name: model_name.as_str().to_owned(),
-      inputs: parse_list(inputs)?,
-      outputs: parse_list(outputs)?,
+      inputs: parse_list(inputs.trim())?,
+      outputs: parse_list(outputs.trim())?,
       latched: Vec::new(),
       logic: Vec::new(),
       //meant to store LogicBlocks
