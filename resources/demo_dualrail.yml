@@ -2,17 +2,30 @@
 simulation:
   name: demo_bitsream_generation
   top_module: fpga_k3_N1_uniform_dualrail_adp2
-  output_dir: ./demo_results/dualrail.ble3
+  output_dir: ./results/demo_flow/dualrail.ble3
+  # test:
+  #   deeper_test:
+  #     deepest_test: $ENV{_}
+  #     deep_array: 
+  #       - $ENV{_}
+  #       - 
+  #         - $ENV{_}
+  #         - deepest_array:
+  #             test: $ENV{_}
   # temp_dir: dualrail.ble3
   options: 
     - "-sv ./*"
+    - "-port_map"
+    - "-dual_rail"
   arguments: 
     run_vtr_experiment:
       - "-latest"
-      - "vtr_display on"
+      - "-vtr_display"
       - "-vv"
-      - "-temp_dir /results"
-      - "$ENV{VTR_LATEST}"
+    # abc2dualrail:
+    #   - "-m"
+      # - "-temp_dir /results"
+      # - "$ENV{VTR_LATEST}"
   circuits: 
     - resources/benchmarks/add8.v
     # - add8r.v
@@ -20,5 +33,7 @@ simulation:
   architectures:
     - resources/K3.xml
   # test_template: /home/userd/Documents/Personal/Projects/Degree_Projects/MEng_SFPGA_2016/fpga/simulation/src/verilog/src/tb_template_k3_N1_uniform_dualrail_adp2.v #used for PAD numbering
-  test_template: "$ENV{FPGA_SRC}/simulation/src/verilog/src/tb_template_k3_N1_uniform_dualrail_adp2.v #used for PAD numbering"
+  test_template: "$ENV{FPGA_SRC}/tb_template_k3_N1_uniform_dualrail_adp2.v" #used for PAD numbering
+  parameters:
+    RUNTIME: 20000
 ...
