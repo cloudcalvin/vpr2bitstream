@@ -2,19 +2,22 @@
 `define _add8_tb
 `timescale 1ps/1ps
 
-`include "add8.v"
+`include "resources/benchmarks/add8.v"
 
+//(* testbench *)
 module add8_tb();
- reg [7:0] a;
- reg [7:0] b;
- reg cin;
+reg [7:0] a;
+reg [7:0] b;
+reg cin;
 
- wire [7:0]sum;
- wire cout;
+wire [7:0]sum;
+wire cout;
 
- parameter test_duration = 0;
+//paramters
+parameter test_delay = 0;
+
 // DUT initialisation
-// all ports must be assigned reg and wires of identical naming;
+//  all ports must be assigned reg and wires of identical naming;
 add8 DUT(
     .a(a),
     .b(b),
@@ -23,7 +26,6 @@ add8 DUT(
     .cout(cout)
   );
 
-//what about parameters?
 
 //testbench init
 initial begin
@@ -34,6 +36,7 @@ initial begin
   $stop;
 end
 
+// # Mutliple tests require a test iterator to be defined.
 //test_iter
 always @ (posedge next_test) begin
   $write("test nr %d done\n",test_nr);
@@ -41,6 +44,7 @@ always @ (posedge next_test) begin
   test_nr = test_nr + 1;
   last_test = $stime;
 end
+
 //end tests condition
 always @ (posedge clk) begin
   if(($stime - last_test) > (end_buffer)) begin
@@ -57,15 +61,20 @@ end
 
 // test 1
 initial begin
-  wait(test == 1);
+  wait(test_nr === 1);
+  $display("TEST %d\n",test_nr); 
 
   a = 8'b11111111;
   b = 8'b00000000;
   
-  #test_duration;
+  #test_delay;
   if (sum == 8'b11111111) begin
-    pass[0] = 1;
+    $display("OK\n"); 
+    // pass[0] = 1;
   end
+  else begin 
+   $display("FAIL\n"); 
+end
   next_test = 1;
 end
 
