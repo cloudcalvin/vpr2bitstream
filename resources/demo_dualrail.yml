@@ -2,33 +2,83 @@
 simulation:
   name: demo_bitsream_generation
   top_module: fpga_k3_N1_uniform_dualrail_adp2
+  test_template: "$ENV{FPGA_SRC}/tb_template_k3_N1_uniform_dualrail_adp2.v" #used for PAD numbering  
+  parameter_template: "$ENV{FPGA_SRC}/p_template_fpga_tb.v" #used for PAD numbering  
   output_dir: ./results/demo_flow/dualrail.ble3
-  # test:
-  #   deeper_test:
-  #     deepest_test: $ENV{_}
-  #     deep_array: 
-  #       - $ENV{_}
-  #       - 
-  #         - $ENV{_}
-  #         - deepest_array:
-  #             test: $ENV{_}
-  # temp_dir: dualrail.ble3
+
   options: 
-    - "-sv ./*"
+    - "-sv ./*" # what was this meant to do?
     - "-port_map"
     - "-dual_rail"
   arguments: 
     run_vtr_experiment:
       - "-latest"
-      - "-vpr_display"
-      # - "-vv"
-  circuits: 
-    - resources/benchmarks/add8.v
+    # vpr:
+      - "-vpr_route_chan_width 4"
+
+      - "-vpr_display" # sit die graphical display aan vir
+      # - "-vv" # -vv is die verbose flag vir abc2dual
+  circuits:
+    # to specify plain usage, using tags or naming convention using testbench
+    # the requirement here is that all module names matche their filenames.
+    # - 
+    #   - resources/benchmarks/add8.v
+    #   - resources/testbenches/add8_tb.v
+
+    # here the file must have similar name as module but does not need tb_ or _tb
+    # '(THIS OPTION MIGHT BE DEPRECATED) 
+    # (could be usefull for forced include dirs.))
+    # Or to allow multi testbench files. 
+    # - 
+    #   test: resources/testbenches/add8_tb.v
+    #   dut: resources/benchmarks/add8.v
+      # THIS WONT WORK SINCE add8_tb internally reference add8.v
+      # THUS TODO : introduce file include overriding. 
+      # dut: resources/benchmarks/add8r.v
+
+    # # to specify top module name with potentially differing file name. 
+    # # but requires (* testbench *) tag in file. 
+    # - mul8_tb: #top:module/file:outdir - could also be used as project name for use in reslts
+    #     - resources/benchmarks/mul8.v
+    #     # - resources/testbenches/test_mul8.v    
+    #     - resources/testbenches/mul8_tb.v    
+    - add8_tb: #top:module/file:outdir - could also be used as project name for use in reslts
+      - resources/benchmarks/add8.v
+      # - resources/testbenches/test_mul8.v    
+      - resources/testbenches/add8_tb.v 
+
+    #not yet suppored : tagged single files.
+    # - radd8: 
+    #   - resources/benchmarks/add8r.v
+    
+    # - mul8_tb:
+    #   - resources/testbenches/mul8_tb.v 
+    
+    # to specify case where tb and dut in same file.  
+    # - resources/benchmarks/add8.v # this TESTBENCHES is defined or stocastic method 
+
+    # IF NO TOP IS SPECIFIED : TESTBENCH FILE MUST END WITH '_tb' 
+    #     and the top module from it then has to be the testbench.
+    #  if no testbench is specified, a testbench is generated or
+    #     no simulation is run.
     # - add8r.v
     # - mul8.v
+  testbenches: #DEPRECATED
+    - resources/testbenches/add8_tb.v # this maps the test to the fpga_tb and the DUT to the fpga..
   architectures:
     - resources/K3.xml
-  test_template: "$ENV{FPGA_SRC}/tb_template_k3_N1_uniform_dualrail_adp2.v" #used for PAD numbering
-  # parameters:
-  #   RUNTIME: 20000
+  # parameters: # parameters can be put here or in parameter file
+  environment:
+    # - TB_PATH: resources/testbenches  #DEPRECATED? (coud use as include dir.)
+    - TB_PATH: # BTW : this wil overwrite or cause an error. 
+        - resources/testbenches
+        - other_resources/testbenches
+    # - VTR_LATEST: /path-to-vtr-latest/vtr-flow/scripts/
+  testbenches: #DEPRECATED # similar to circuits but includes the test and is very particular.
+    - "/path/path/path"
+    - "more path"
+  parameters: # see sim docs
+    # - RUNTIME: 20000 # this does not make much sense as each IP requires diff runtime.
+    - splitter_delay: 3             
+    # - "resources/fpga_k3_N1_uniform_dualrail_adp2.para" 
 ...
