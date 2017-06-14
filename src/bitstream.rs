@@ -31,7 +31,7 @@ use errors::*;
 use types::*;
 use types::PortFlow::*;
 use types::XY::*;
-use output::output_bitstream;
+// use output::output_bitstream;
 
 
 
@@ -111,13 +111,13 @@ use output::output_bitstream;
 ///
 ///pub fn build_bitstream<'a>(nets: &'a Vec<Net>, blocks : &'a Vec<Vec<Block>>, tiles : &'a mut Vec<Vec<TileBuilder>>) -> Result<usize>{
 ///pub fn build_bitstream<'a>(nets: &'a Vec<NetLocal>, blocks : &'a Vec<Vec<Block>>, tiles : &'a mut Vec<Vec<Tile>>, places : &'a Vec<Placement>) {
-pub fn build_bitstream<'a>(tiles : &'a mut Vec<Vec<Tile>>, nets: &'a Vec<Net>, models : &'a Vec<Model>, place : &'a Placement) {
+pub fn build_bitstream<'a>(tiles : &'a mut Vec<Vec<Tile>>, nets: &'a Vec<RouteNet>, models : &'a Vec<Model>, place : &'a Placement) {
   //todo: go through all the models, and map the model logic to the placement data and store them together in block matrix or hashmap
   vv_bits_println!("\n\nRouting bitstream generation start");
   
   //bitstream for every net in nets.
-  for net_enum in nets {
-    if let &Net::Local(ref net) = net_enum{
+  for net in nets {
+    // if let &Net::Local(ref net) = net_enum{
       let branches : &Vec<Route> = net.route_tree.as_ref();
       // let first_track = &branches[0].tracks[0];
 
@@ -132,9 +132,9 @@ pub fn build_bitstream<'a>(tiles : &'a mut Vec<Vec<Tile>>, nets: &'a Vec<Net>, m
       //
       vv_bits_println!("Sink to Routing bitstream generation start");
       build_bitstream_routing_branches(&net.src,tiles,branches);
-    }else{
-      vv_bits_println!("global net routing skipped");
-    }
+    // }else{
+    //   vv_bits_println!("global net routing skipped");
+    // }
     vv_bits_println!("Routing bitstream generation done");
   }
 
@@ -478,17 +478,25 @@ pub fn build_bitstream_logic_blocks<'a>(tiles : &'a mut Vec<Vec<Tile>>, models :
     for logic in &model.logic{
       bits_println!("trying to write ble bits to {:#?}",&logic.output);
 
-      let &Point(x,y) = place.get(&logic.output)
-          .expect(format!("Error reading block placement from placement file. {:?}",&logic.output).as_str());
+      if let Some(&Point(x,y)) = place.get(&logic.output){
+        let ref mut tile : Tile = tiles[y as usize][x as usize];
 
-      let ref mut tile : Tile = tiles[y as usize][x as usize];
+        bits_println!("bitstream_logic_blocks writing bits to tile ({:},{:})  :",y,x);
 
-      bits_println!("bitstream_logic_blocks writing bits to tile ({:},{:})  :",y,x);
-
-      for i in &logic.truth_idxs{
-        bits_println!(" writing to idx : {:?}",*i);
-        tile.set_ble_at(*i);
+        for i in &logic.truth_idxs{
+          bits_println!(" writing to idx : {:?}",*i);
+          tile.set_ble_at(*i);
+        }
+      }else{
+        //the point could not be found. This could be because latching to output pad.
+        let &Point(x,y) = place.get(&format!("out:{}",&logic.output))
+          .expect(format!("Error generating bitstream: Could not find placement data for {:?}",&logic.output).as_str());        
+        if (*BLIF_DEBUG) | (*BITSTREAM){
+          vv_bits_println!("Found output logic block defined in Blif file that could not be found in .place file. ")
+        }
       }
+
+
     }
   }
 
