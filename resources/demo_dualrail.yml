@@ -1,23 +1,25 @@
 ---
 simulation:
   name: demo_bitsream_generation
-  top_module: fpga_k3_N1_uniform_dualrail_adp2
-  test_template: "$ENV{FPGA_SRC}/tb_template_k3_N1_uniform_dualrail_adp2.v" #used for PAD numbering  
+  top_module: fpga_k3_N1_uniform_adp2
+  test_template: "$ENV{FPGA_SRC}/tb_template_k3_N1_uniform_adp2.v" #used for PAD numbering  
   parameter_template: "$ENV{FPGA_SRC}/p_template_fpga_tb.v" #used for PAD numbering  
   output_dir: ./results/demo_flow/dualrail.ble3
 
   options: 
     - "-sv ./*" # what was this meant to do?
     - "-port_map"
-    - "-dual_rail"
+    # - "-dual_rail"
   arguments: 
     run_vtr_experiment:
       - "-latest"
     # vpr:
-      - "-vpr_route_chan_width 4"
+      - "-vpr_route_chan_width 6"
 
-      - "-vpr_display" # sit die graphical display aan vir
+      # - "-vpr_display" # sit die graphical display aan vir
       # - "-vv" # -vv is die verbose flag vir abc2dual
+    vpr2bitstream:
+      # - "-vv"  
   circuits:
     # to specify plain usage, using tags or naming convention using testbench
     # the requirement here is that all module names matche their filenames.
@@ -44,8 +46,23 @@ simulation:
     #     - resources/testbenches/mul8_tb.v    
     - add8_tb: #top:module/file:outdir - could also be used as project name for use in reslts
       - resources/benchmarks/add8.v
-      # - resources/testbenches/test_mul8.v    
+    #   # - resources/testbenches/test_mul8.v    
       - resources/testbenches/add8_tb.v 
+
+    # - lfsr4_man_tb: #top:module/file:outdir - could also be used as project name for use in reslts
+    #   - resources/benchmarks/lfsr4_man.v
+    #   # - resources/testbenches/test_mul8.v    
+    #   - resources/testbenches/lfsr4_man_tb.v 
+
+    - serial_crc_16_tb:
+      - resources/testbenches/serial_crc_16_tb.v
+      - resources/benchmarks/serial_crc_16.v
+
+    # - smux_tb:
+    #   - resources/benchmarks/smux.v
+
+    # - bin_to_asc_hex_tb:
+    #   - resources/benchmarks/bin_to_asc_hex.v
 
     #not yet suppored : tagged single files.
     # - radd8: 
@@ -77,7 +94,7 @@ simulation:
   testbenches: #DEPRECATED # similar to circuits but includes the test and is very particular.
     - "/path/path/path"
     - "more path"
-  parameters: # see sim docs
+  parameters: # PARAMETER OVERRIDES. see sim docs
     # - RUNTIME: 20000 # this does not make much sense as each IP requires diff runtime.
     - splitter_delay: 3             
     # - "resources/fpga_k3_N1_uniform_dualrail_adp2.para" 

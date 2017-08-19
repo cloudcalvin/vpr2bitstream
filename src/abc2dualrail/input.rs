@@ -1,7 +1,7 @@
 
 use vpr_extra::global::*;
 
-pub fn load_inputs(){
+pub fn set_input_files(){
 
   // Gets a value for config if supplied by user, or defaults to "default.conf"
   let user_config = (*MATCHES).value_of("config").unwrap_or("default.conf");
@@ -17,7 +17,6 @@ pub fn load_inputs(){
   };
 
   // let mut blif_file   = format!("{}{}",&blif_file,".blif");
-
 
   println!("VPR project name: {:?}", &vpr_name);
   println!("Config file : {:?}", &user_config);

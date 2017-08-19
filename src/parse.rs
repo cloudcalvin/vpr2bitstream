@@ -1,7 +1,9 @@
 use types::*;
 use errors::*;
+use errors::Error;
 #[macro_use]
 use global::*;
+use logging::*;
 
 use std::iter::Map;
 use std::fs::File;
@@ -12,7 +14,8 @@ use std::io;
 use std::io::prelude::*;
 use std::collections::HashMap;
 
-pub use regex::{Regex, Captures, RegexSet};
+// pub use regex::{Regex, Captures, RegexSet};
+pub use regex::*;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 //Parse .place file :
@@ -48,12 +51,30 @@ pub use regex::{Regex, Captures, RegexSet};
 ///     n35		      5	3	0	#7
 /// ``` note: not as well aligned in real file.
 ///
-pub fn parse_place_file<P: AsRef<Path>>(file_path: P) -> Result<(u16, String, String, Placement)> {
+pub fn parse_place_file<P: AsRef<Path>>(file_path: P) -> Result<(u16, String, Option<String>, Placement, PlacementMap)> {
   //Setup regex's
   lazy_static! { // TODO  :make these regex look better.
-    static ref PLACE_FILE_REGEX_files : Regex = Regex::new(
-      r"^Netlist file: (?P<netlist_file>.+) Architecture file: (?P<arch_file>.+)"
-    ).unwrap();
+    static ref PLACE_FILE_REGEX_files : Regex = Regex::new(r"(?x)
+      # VTR version 7      
+      ^Netlist file: ([[:graph:]]+) Architecture file: (?P<arch_file>.+)
+      |
+      # VTR version 8
+      ^Netlist_File:\s+([[:graph:]]+)\s+Netlist_ID:\s+([[:graph:]]+)
+    ").unwrap();
+    // static ref PLACE_FILE_REGEX_files : RegexSet = Regex::new(
+    //   r"^Netlist file: (?P<netlist_file>.+) Architecture file: (?P<arch_file>.+)",
+    //   r"^Netlist file: (?P<netlist_file>.+)"
+    // ).unwrap();
+    // static ref PLACE_FILE_REGEX_SET_files : RegexSet = RegexSet::new(&[
+    //   r"^Netlist file: (.+?) Architecture file: (.+?)", //vtr 7
+    //   r"^Netlist_File: (.+?) Netlist_ID: (.+?)" //vtr 8
+    // ]).unwrap();
+    // static ref PLACE_FILE_REGEX_files : Regex = Regex::new(
+    //    r"(Netlist file: (?P<netlist_file>.+) )|(Architecture file: (?P<arch_file>.+))"
+    // ).unwrap();
+    // static ref PLACE_FILE_REGEX_netlist: Regex = Regex::new(
+    //   r"^Netlist file: (?P<netlist_file>.+) .+?|^Netlist_File: (.+?) Netlist_ID: .+?"
+    // ).unwrap();
     static ref PLACE_FILE_REGEX_array_size : Regex = Regex::new(
       r"^Array size:\s+(?P<size>\d+)\s+"
      ).unwrap();
@@ -64,10 +85,13 @@ pub fn parse_place_file<P: AsRef<Path>>(file_path: P) -> Result<(u16, String, St
   // Init variable
   let mut n: u16 = 0;
   let mut netlist_file = String::new();
-  let mut arch_file = String::new();
+  let mut arch_file = None;
   let mut placement: Placement = HashMap::new();
-  let file_name = (*file_path.as_ref()).to_str().unwrap();// {
-  println!("Read file : {}", &file_name);
+  let mut placement_map: PlacementMap = HashMap::new();
+
+
+  let file_name = (*file_path.as_ref()).to_str().expect("Error: Placement file could not be read.");
+  info_println!("\nParsing .place file: {:?}", &file_name);
 
   //Read File into Buffer
   let f = try!(File::open(Path::new(&file_name)));
@@ -102,19 +126,35 @@ pub fn parse_place_file<P: AsRef<Path>>(file_path: P) -> Result<(u16, String, St
       // IF LINE 0 : capture file names.
       0 =>
         {
-          let captured: Option<Captures> = PLACE_FILE_REGEX_files.captures(line); //captures, executes the regex query defined in 'util.rs'
+
+          let captured: Option<Captures> = PLACE_FILE_REGEX_files.captures(&line); //captures, executes the regex query defined in 'util.rs'
           match captured {
             Some(ref cap) => {
-              let net = try!(Captures::name(cap, "netlist_file")
+
+            // println!("{:#?}",captured);
+              vv_place_println!("netlist capture: {:#?}",cap);
+              
+              // let net = try!(Captures::name(cap, "netlist_file")
+              //     .ok_or::<Error>("No Netlist file specified in .place file.".into()));
+              let net = try!(cap.get(3)
                   .ok_or::<Error>("No Netlist file specified in .place file.".into()));
 
-              let arch = try!(Captures::name(cap, "arch_file")
-                  .ok_or::<Error>("No Architecture file specified in .place file.".into()));
+              // let arch = try!(Captures::name(cap, "arch_file")
+              //     .ok_or::<Error>("No Architecture file specified in .place file.".into()));
+
+              let arch = Captures::name(cap, "arch_file");
+
               netlist_file = String::from(net.as_str());
-              arch_file = String::from(arch.as_str());
+              // arch_file = arch.map(|capture| String::fromcapture.asStri)
+
+              arch_file = match arch {
+                Some(capture) => Some(String::from(capture.as_str())),
+                _ => None
+              }
+              // arch_file = String::from(arch.as_str());
               //
             },
-            _ => println!("Error parsing")//Err("Malformed .parse file".into())
+            _ => bail!(format!("\nError: Malformed .parse file:\nNetlist and architecture files could be determined from lines : (\"{:}\")",&line))   //Err("Malformed .parse file".into())
           }
         },
       // IF LINE 1 : capture lut array size.
@@ -127,7 +167,8 @@ pub fn parse_place_file<P: AsRef<Path>>(file_path: P) -> Result<(u16, String, St
                   .ok_or::<Error>("No array size specified in .place file.".into()));
               n = array_size.as_str().parse::<u16>()?;
             },
-            _ => println!("Malformed .parse file")
+            // _ => println!("Malformed .parse file")
+            _ => bail!(format!("\nError: Malformed .parse file:\nArray size could not be determined from (\"{:}\")",&line))    
           }
         },
       _ => {
@@ -175,15 +216,16 @@ pub fn parse_place_file<P: AsRef<Path>>(file_path: P) -> Result<(u16, String, St
 
 //        placement_list.push((String::from(name.as_str()), Point(x.clone(), y.clone())));
         placement.insert(String::from(name.as_str()), Point(x.clone(), y.clone()));
+        placement_map.insert(Point(x.clone(), y.clone()),String::from(name.as_str()) );
         //          println!("{:#?}",(String::from(name.as_str()),Point(x.clone(),y.clone())));
       }
-      None => info_println!("skipping .place file lines : >{}<", &line) 
+      None => place_println!("skipping .place file lines : >{}<", &line) 
     }
     //    }else{
     //      break
     //    }
   }
-  Ok((n, netlist_file, arch_file, placement))
+  Ok((n, netlist_file, arch_file, placement,placement_map))
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -205,14 +247,21 @@ pub fn parse_place_file<P: AsRef<Path>>(file_path: P) -> Result<(u16, String, St
 ///
 ///
 
-pub fn parse_route_file<P: AsRef<Path>>(file_path: P) -> Result<(u16, Vec<Net>)> {
+pub fn parse_route_file<P: AsRef<Path>>(file_path: P) -> Result<(u16, Option<String>, Vec<RouteNet>, Vec<GlobalNet>)> {
   // Init return variables and regex
   let mut n: u16 = 0;
-  let mut nets: Vec<Net> = Vec::new();
+  let mut placement_file : Option<String> = None;
+  let mut route_nets: Vec<RouteNet> = Vec::new();
+  let mut global_nets: Vec<GlobalNet> = Vec::new();
 
   lazy_static! {
     static ref RE_net_seperator : Regex = Regex::new(
        r"Net"
+    ).unwrap();
+
+    // Update for vpr 8.x
+    static ref RE_file_header_placement_file : Regex = Regex::new(
+      r"^Placement_File: (.+?) Placement_ID: (.+?)"
     ).unwrap();
 
     static ref RE_file_header_array_size : Regex = Regex::new(
@@ -222,17 +271,18 @@ pub fn parse_route_file<P: AsRef<Path>>(file_path: P) -> Result<(u16, Vec<Net>)>
     static ref RE_node_seperator: Regex = Regex::new(
        r"\n\n"
     ).unwrap();
-
-//
   }
 
+  
   //Read File into Buffer
   let file_name = (*file_path.as_ref()).to_str().unwrap();// {
+  info_println!("\nParsing .route file: {:?}", &file_name);  
+    
   let mut f = try!(File::open(Path::new(&file_name)));
   // let mut file = BufReader::new(&f);
   let mut contents = String::new();
   f.read_to_string(&mut contents).unwrap();
-  println!("Read file : {}", &file_name);
+
 
   //split file into header vs data
   let (header, data) = {
@@ -241,16 +291,31 @@ pub fn parse_route_file<P: AsRef<Path>>(file_path: P) -> Result<(u16, Vec<Net>)>
     (h, parts)
   };
 
-  //Parse header
-  let header_line = header.lines().next().ok_or("Malformed .route file : No Header found.").unwrap(); //is making it an iterator when only need the first line more/less costly? probably more.
-  let captured: Option<Captures> = RE_file_header_array_size.captures(&header_line);
-  match captured {
+  let place_capture: Option<Captures> = RE_file_header_placement_file.captures(&header);
+  let array_size_capture: Option<Captures> = RE_file_header_array_size.captures(&header);
+
+  if header.len() < 2 && array_size_capture.as_ref().unwrap().len() == 0{
+    bail!("Malformed .route file : No Header found.")
+  }
+
+  match place_capture {
+    Some(ref cap) => {
+      placement_file = match cap.get(1) {
+        Some(capture) => Some(String::from(capture.as_str())),
+        _ => None
+      }
+    },
+    _ => println!("Malformed .route file : Might be running old version of VTR ({:})",&header)
+  }
+  
+  // let captured: Option<Captures> = RE_file_header_array_size.captures(&header_line);
+  match array_size_capture {
     Some(ref cap) => {
       let array_size = try!(Captures::name(cap, "arr_size")
           .ok_or::<Error>("No array size specified in .place file.".into()));
       n = array_size.as_str().parse::<u16>()?;
     },
-    _ => println!("Malformed .route file")
+    _ => panic!(format!("Malformed .route file : Array size could not be determined from ({:})",&header))
   }
 
 
@@ -258,15 +323,16 @@ pub fn parse_route_file<P: AsRef<Path>>(file_path: P) -> Result<(u16, Vec<Net>)>
   for net_text in data {
 
 //    let parsed parse_net(net_text)(|net| net)
-    nets.push(parse_net(net_text)?);
+    parse_net(&mut global_nets,&mut route_nets, net_text)?
+    // nets.push(parse_net(net_text)?);
   }
   //return
-  Ok((n, nets))
+  Ok((n, placement_file, route_nets, global_nets))
 }
 
 
 /// Returns the parsed data from a text representation of a net.
-fn parse_net(text: &str) -> Result<Net> {
+fn parse_net(global_nets : &mut Vec<GlobalNet>, route_nets : &mut Vec<RouteNet>,  text: &str) -> Result<()> {
   //setup regex
   lazy_static! {
     static ref RE_node_separator: Regex = Regex::new(
@@ -274,7 +340,7 @@ fn parse_net(text: &str) -> Result<Net> {
     ).unwrap();
     static ref RE_net_header: Regex = Regex::new(
       r"(?x)
-      (?P<net_nr>\d+)[[:blank:]]+\((?P<net_name>[[:graph:]]+)\)             # Node net
+      (?P<net_nr>\d+)[[:blank:]]+\((?P<net_name>[[:graph:]]+)\)              # Node net
       #|                                                                     # or
       #(?P<net_nr>\d+)[[:blank:]]+\((?P<net_name>[[:graph:]]+)\):
       #[[:blank:]]+?global[[:blank:]]+?net[[:blank:]]+?conneting             # Global net
@@ -310,8 +376,9 @@ fn parse_net(text: &str) -> Result<Net> {
 
   if RE_global_net.is_match(&net_header) {
     //net is a global net..  so dont call parse node.. call parse globals
-    println!("skipping global net");
-    Ok(Net::Global(NetGlobal))
+    info_println!("skipping global net");
+    // Ok(Net::Global(NetGlobal))
+    Ok(())
 
   } else {
     // the first two lines describe the source
@@ -369,7 +436,7 @@ fn parse_net(text: &str) -> Result<Net> {
               },
             NodeType::OPin => {
               //dont think i need to know this..
-              info_println!("Ignoring secondary OPIN nodes found in net : \
+              route_println!("Ignoring secondary OPIN nodes found in net : \
                   {} {} {:?} {} with the SOURCE OPIN at {:?} {}",
                        node_nr, &"OPIN", xy, meta_nr, src_data.xy, pin_data.meta_nr);
               // route.opins.push()
@@ -395,12 +462,15 @@ fn parse_net(text: &str) -> Result<Net> {
         Err(e) => Err(e.into())
       };
     }
-    Ok(Net::Local(NetLocal {
+
+    route_nets.push(  RouteNet{
       name: net_name.to_owned(),
       src: Source(src_data.xy, pin_data.meta_type ,src_data.meta_nr, pin_data.meta_nr),
 //      net_type: NetType::NonGlobal,
       route_tree: route_tree,
-    }))
+    });
+
+    Ok(())
   }
 
 }
@@ -501,6 +571,9 @@ fn parse_node(line: &str) -> Result<Node> {
   }
   //    }
 }
+
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 //Parse .blif file :
 //contains '.names' id's and lut content. content mapped to input ports..
@@ -544,6 +617,7 @@ pub fn parse_blif_file<'a, P: AsRef<Path>>(file_path: P) -> Result<Vec<Model>> {
 
 
   let file_name = (*file_path.as_ref()).to_str().unwrap();// {
+  info_println!("\nParsing .blif file: {:?}", &file_name);  
 
   //Read File into Buffer
   let f = try!(File::open(Path::new(&file_name)));
@@ -551,7 +625,7 @@ pub fn parse_blif_file<'a, P: AsRef<Path>>(file_path: P) -> Result<Vec<Model>> {
 
   let mut contents = String::new();
   file.read_to_string(&mut contents).unwrap();
-  info_println!("Read file : {}", &file_name);
+  
 
 
   //split file into header vs data
@@ -591,6 +665,8 @@ pub fn parse_blif_file<'a, P: AsRef<Path>>(file_path: P) -> Result<Vec<Model>> {
 ///  //   [1][3] => first lut
 ///  //   [1][4] => second lut
 fn parse_blif_model(content: &str) -> Result<Model> {
+
+  //setup regex.
   lazy_static! {
     static ref RE_split_on_dot : Regex = Regex::new(
 //      r"\s*\.\w+\s+" // this should also remove the word that is part of the delimeter.
@@ -599,29 +675,38 @@ fn parse_blif_model(content: &str) -> Result<Model> {
     static ref RE_blif_lut_ports: Regex = Regex::new(
       r"(?P<name>(?-u:\b).+(?-u:\b))[[:space:]]+(?P<x>\d)[[:space:]]+(?P<y>\d)[[:space:]]+(?P<sub_blk>\d)[[:space:]]+#(?P<blk_nr>\d)"
     ).unwrap();
-    static ref RE_blank :  Regex = Regex::new(r"\s").unwrap();
+    static ref RE_blank :  Regex = Regex::new(r"\s+").unwrap();
     static ref RE_linefeed : Regex = Regex::new(r"\\").unwrap();
     static ref RE_primitive : Regex = Regex::new(r"(?s)names\s+(?P<lut_line>.+)|(?s)latch\s+(?P<latch_line>.+)|(?s)subckt\s+(?P<subskt_line>.+)").unwrap();
-
   }
+
+  // parse list function used later.
   fn parse_list(str: &str) -> Result<Vec<String>> {
+    
     let re: Regex = Regex::new(r" \\\n |\s").unwrap();
+    // let re: Regex = Regex::new(r"\\\\|\s\\\s+?\n+?|\s").unwrap();
+
     let s: Vec<String> = re.split(&str).map(|s| s.to_owned()).skip(1).collect();
     Ok(s)
+
   };
 
   //split model into model header and primitives
   let (mut model, model_parts) = {
+    
     let mut model_parts = RE_split_on_dot.split(&content);
     let mut parts = RE_split_on_dot.split(&content);
+    
     for p in parts {
-      debug_println!("part : {:?}", p);
+      vv_blif_println!("part : {:?}", p);
     }
+    
     let model_name_line = model_parts.next().ok_or("Malformed blif file : Incorrect model header.").unwrap();
     let inputs = model_parts.next().ok_or("Malformed blif file : Incorrect model header.").unwrap();
     let outputs = model_parts.next().ok_or("Malformed blif file : Incorrect model header.").unwrap();
 
     let model_name = Regex::new(r"(?P<name>[[:graph:]]+)\s*\n").unwrap().captures(model_name_line).unwrap().name("name").unwrap();
+    
     //setup model without the LUT data.
     let model_struct = Model {
       name: model_name.as_str().to_owned(),
@@ -631,111 +716,35 @@ fn parse_blif_model(content: &str) -> Result<Model> {
       logic: Vec::new(),
       //meant to store LogicBlocks
     };
-
-
     (model_struct, model_parts)
   };
 
   //parse primitives
   for primitive in model_parts {
+
     if let Some(ref cap) = RE_primitive.captures(primitive) {
+      
       if let Some(lut_line) = Captures::name(cap, "lut_line") {
-        debug_println!("captured a lut : {:?}", lut_line.as_str());
-        let mut inputs: Vec<String> = Vec::new();
-        let mut output = String::new();
-        let mut lines = lut_line.as_str().lines(); //remember : iterator, thus keeps state..
 
-        //parse input names.
-        let mut seed: &str = lines.next().unwrap();
-        while let Some(_) = Regex::new(r"\\")?.captures(seed) {
-          // if '\' present extend inputs parsing into next line.
-          inputs.append(&mut RE_blank.split(seed).map(|s| s.to_owned()).collect::<Vec<String>>());
-          seed = lines.next().unwrap();
-        }
-        inputs.append(&mut RE_blank.split(&seed).map(|s| s.to_owned()).collect());
+        vv_blif_println!("captured a lut : {:?}", lut_line.as_str());
+        let lb = parse_lut(lut_line.as_str())?;
+        model.logic.push(lb);
 
-        //output is last value from the parsed inputs
-        output = inputs.pop().ok_or::<Error>("No output".into())?;
-
-
-        lazy_static! {
-          static ref k : usize = 3;
-          static ref tt_size : usize = (2 as usize).pow(3);
-        }
-
-        let truth_lines = lines.map(|s| s.to_owned()).collect();
-
-        let mut truth_idxs = Vec::with_capacity(*tt_size);
-        let mut truth_table = vec![false; *tt_size];
-
-        let mut tt_full = Vec::new();
-        for i in 0..*tt_size {
-          tt_full.push(format!("{:01$b}", i, k));
-        }
-
-
-//        for line in truth_lines {
-//          //      println!("line: {}",&line);
-//          if let Some(ref cap) = Regex::new(r"(?P<in>\d+) (\d+)").unwrap().captures(line) {
-//            let _in = Captures::name(cap, "in")
-//                .ok_or::<Error>(format!("Could not fine output value in truth table").into()).unwrap()
-//                .as_str().to_owned();
-//            let mut _in = _in;
-//            let mut idx = 0u16;
-//            for i in 0.._in.len(){
-//              let char = _in.pop().unwrap();
-//              if char == '1'{
-//                idx = idx + 2u16.pow(i as u32)
-//              }
-//            }
-//
-//          } else {
-//            panic!("Could not capture any inputs or outputs from truth-table")
-//          }
-//        }
-
-        //dont-care replacement
-        let mut lut_data = replace(truth_lines);
-
-
-        //assumption made here that truth table is in right order.
-        for line in lut_data.iter() {
-          //      println!("line: {}",&line);
-          if let Some(ref cap) = Regex::new(r"(?P<in>\d+) (?P<out>\d+)").unwrap().captures(line) {
-            let _out = Captures::name(cap, "out")
-                .ok_or::<Error>(format!("Could not fine output value in truth table").into()).unwrap()
-                .as_str();
-            let _in = Captures::name(cap, "in")
-                .ok_or::<Error>(format!("Could not fine output value in truth table").into()).unwrap()
-                .as_str().to_owned();
-            let mut _in = _in;
-            while _in.len() != 3 {
-              _in = _in.chars().rev().collect();     // need to swop around the order so that I
-              _in.push('0');                         //     can push from the front..
-              _in = _in.chars().rev().collect();     // then swop back. // todo : find pushn(0,'0')
-            }
-//            truth_indexes = std::num::from_str_radix::<usize>(&_out, 2).unwrap();
-            let idx = tt_full.binary_search(&_in).unwrap();
-            truth_table[idx] = true;
-            truth_idxs.push(idx);
-          } else {
-            panic!("Could not capture any inputs or outputs from truth-table")
-          }
-        }
-
-        model.logic.push(LogicBlock {
-          inputs: inputs,
-          output: output,
-          //      truth_table: truth.iter().map(|t| t.unwrap()).collect(),
-          //      latched: false,
-          truth_idxs : truth_idxs,
-          truth_table: truth_table,
-        })
       } else if let Some(latch_line) = Captures::name(cap, "latch_line") {
-        debug_println!("captured a latch : {:?}", latch_line.as_str());
+
+        vv_blif_println!("captured a latch : {:?}", latch_line.as_str());
+        let latch = parse_latch(latch_line.as_str())?;
+        model.latched.push(latch);
+
       } else if let Some(subskt_line) = Captures::name(cap, "subckt_line") {
-        debug_println!("captured a subskt : {:?}", subskt_line.as_str());
+
+        vv_blif_println!("captured a subskt : {:?}", subskt_line.as_str());
+        unimplemented!();
+        let sc = parse_subskt(subskt_line.as_str())?;
+        // model.logic.push(latch);
+
       } else {
+
         print!("Malformed blif - Could not parse line : >{}<", &primitive);
       }
     }
@@ -743,6 +752,160 @@ fn parse_blif_model(content: &str) -> Result<Model> {
 
   //  println!("{:#?}",&model);
   Ok(model)
+}
+
+fn parse_lut(content: &str) -> Result<LogicBlock> {
+
+  lazy_static!{
+    static ref RE_blank :  Regex = Regex::new(r"\s+").unwrap();    
+  }
+  println!("here");
+  let mut inputs: Vec<String> = Vec::new();
+  let mut output = String::new();
+  let mut lines = content.lines(); //remember : iterator, thus keeps state..
+
+  //parse input names.
+  let mut seed: &str = lines.next().unwrap();
+  println!("here");
+  
+  while let Some(_) = Regex::new(r"\\")?.captures(seed) {
+    // if '\' present extend inputs parsing into next line.
+    let chars_to_trim: &[char] = &['\\', '\n',' '];
+    let mut trimmed = seed.trim_matches(chars_to_trim);
+    inputs.append(&mut RE_blank.split(trimmed).map(|s| s.trim().to_owned()).collect::<Vec<String>>());
+    seed = lines.next().unwrap();
+  }
+  println!("here");
+  
+  inputs.append(&mut RE_blank.split(&seed).map(|s| s.to_owned()).collect());
+  //output is last value from the parsed inputs
+  output = inputs.pop().ok_or::<Error>("No output".into())?;
+
+  // println!("GOT INPUTS : {:#?}",inputs.trim());
+  // println!("GOT OUTPUTs: {:#?}",output.trim());
+
+  lazy_static! {
+    static ref k : usize = *LUT_K as usize;
+    static ref tt_size : usize = (2 as usize).pow(*LUT_K as u32);
+  }
+  println!("here");
+
+  let truth_lines = lines.map(|s| s.to_owned()).collect();
+
+  let mut truth_idxs = Vec::with_capacity(*tt_size);
+  let mut truth_table = vec![false; *tt_size];
+
+  let mut tt_full = Vec::new();
+  for i in 0..*tt_size {
+    tt_full.push(format!("{:01$b}", i, k));
+  }
+  println!("here");
+  
+  // this is some kind of dont care replacement or something.
+  //        for line in truth_lines {
+  //          //      println!("line: {}",&line);
+  //          if let Some(ref cap) = Regex::new(r"(?P<in>\d+) (\d+)").unwrap().captures(line) {
+  //            let _in = Captures::name(cap, "in")
+  //                .ok_or::<Error>(format!("Could not fine output value in truth table").into()).unwrap()
+  //                .as_str().to_owned();
+  //            let mut _in = _in;
+  //            let mut idx = 0u16;
+  //            for i in 0.._in.len(){
+  //              let char = _in.pop().unwrap();
+  //              if char == '1'{
+  //                idx = idx + 2u16.pow(i as u32)
+  //              }
+  //            }
+  //
+  //          } else {
+  //            panic!("Could not capture any inputs or outputs from truth-table")
+  //          }
+  //        }
+
+  //dont-care replacement
+  let mut lut_data = replace(truth_lines);
+
+  println!("here");
+
+  //assumption made here that truth table is in right order.
+  for line in lut_data.iter() {
+  println!("iter");
+    
+    //      println!("line: {}",&line);
+    if let Some(ref cap) = Regex::new(r"(?P<in>\d+) (?P<out>\d+)").unwrap().captures(line) {
+      let _out = Captures::name(cap, "out")
+          .ok_or::<Error>(format!("Could not fine output value in truth table").into()).unwrap()
+          .as_str();
+      let _in = Captures::name(cap, "in")
+          .ok_or::<Error>(format!("Could not fine output value in truth table").into()).unwrap()
+          .as_str().to_owned();
+      let mut _in = _in;
+      println!("k : {:#?}", *k);
+      println!("in : {:#?}", _in);
+      while _in.len() != *k {
+      // println!("iter2");
+        
+        _in = _in.chars().rev().collect();     // need to swop around the order so that I
+        _in.push('0');                         //     can push from the front..
+        _in = _in.chars().rev().collect();     // then swop back. // todo : find pushn(0,'0')
+      }
+  //            truth_indexes = std::num::from_str_radix::<usize>(&_out, 2).unwrap();
+      let idx = tt_full.binary_search(&_in).unwrap();
+      truth_table[idx] = true;
+      truth_idxs.push(idx);
+    } else {
+      panic!("Could not capture any inputs or outputs from truth-table")
+    }
+  }
+  println!("here");
+
+  Ok(
+    LogicBlock {
+      inputs: inputs,
+      output: output,
+      //      truth_table: truth.iter().map(|t| t.unwrap()).collect(),
+      //      latched: false,
+      truth_idxs : truth_idxs,
+      truth_table: truth_table,
+    }
+  )
+
+}
+fn parse_latch(content: &str) -> Result<(String, String, String, String, String)> {
+
+  lazy_static! {
+    static ref RE_LATCH_STRING: Regex = Regex::new(
+      r"[[:space:]]*([[:graph:]]+)[[:space:]]+([[:graph:]]+)[[:space:]]+([[:graph:]]+)[[:space:]]+([[:graph:]]+)[[:space:]]+([[:graph:]]+)"
+    ).unwrap();
+  }
+
+  if let Some(cap) = RE_LATCH_STRING.captures(content){
+    let _input = try!(cap.get(1)
+          .ok_or::<Error>(format!("Error: Malformed blif file({}).",content).into()))
+          .as_str();
+    let _output = try!(cap.get(2)
+        .ok_or::<Error>(format!("Error: Malformed blif file({}).",content).into()))
+        .as_str();
+    let _type = try!(cap.get(3)
+        .ok_or::<Error>(format!("Error: Malformed blif file({}).",content).into()))
+        .as_str();
+    let _control = try!(cap.get(4)
+        .ok_or::<Error>(format!("Error: Malformed blif file({}).",content).into()))
+        .as_str();
+    let _initial_value = try!(cap.get(5)
+        .ok_or::<Error>(format!("Error: Malformed blif file({}).",content).into()))
+        .as_str();
+
+    Ok ( (String::from(_input), String::from(_output), String::from(_type), String::from(_control) , String::from(_initial_value)) )
+
+  }else{
+    Err(format!("Error: Malformed blif file({}).",content).into())    
+  }
+}
+
+
+fn parse_subskt(content: &str) ->  Result<()> {
+    unimplemented!();
 }
 
 /// dont-care replacement (text based)

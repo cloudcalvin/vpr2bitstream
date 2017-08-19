@@ -41,6 +41,8 @@ error_chain! {
         Io(::std::io::Error) #[cfg(unix)];
         Parse(::std::num::ParseIntError);
         Regex(::regex::Error);
+        Args(::clap::Error);
+        // Config(::std::sync::PoisonError<::std::sync::MutexGuard<_, ::global::Config>>);
 
         // Syntax(String);
     }

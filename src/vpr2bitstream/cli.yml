@@ -3,6 +3,13 @@ version: "1.0"
 author: Maree C. <calvinworkaccount@live.co.uk>
 about: Parses VPR FPGA placement and routing output into a bitstream used to program the fpga.
 args:
+    - config:
+        short: c
+        long: config
+        value_name: FILE
+        takes_value: true
+        help: Sets a custom config file
+        
     - verbose:
         short: v
         long: verbose
@@ -15,41 +22,89 @@ args:
         multiple: true
         takes_value: true
 #        help: Enables debug printing for the specified option. Options available are  'b' - blif, 'p' - place, 'r' - route, 'c' - config
-    - config:
-        short: c
-        long: config
-        value_name: FILE
-        takes_value: true
-        help: Sets a custom config file
+
     - INPUT:
         value_name: FILE
         takes_value: false
         index: 1
         help: the VPR project name to use for place, route and blif file.
     - blif:
-        short: b
         long: blif
         value_name: FILE
         takes_value: true
         help: Sets the blif file to use
     - place:
-        short: p
         long: place
         value_name: FILE
         takes_value: true
         help: Sets the .place file to use
     - route:
-        short: r
         long: route
         value_name: FILE
         takes_value: true
         help: Sets the .route file to use
+    - parameter:
+        short: p
+        long: parameter
+        takes_value: true
+        multiple: true
+        help: Sets the parameter or parameter file to use
+
     - map:
         short: m
         long: map
-        takes_value: false
+        value_name: FILE
+        min_values: 0
+        takes_value: true
         help: Sets the file to output the port mapping to. 
-#
+    - timing:
+        short: t
+        long: timing
+        value_name: FILE
+        takes_value: true
+        min_values: 0
+        help: Calculates the critical path delays. 
+    - dual_rail:
+        long: dual_rail
+        takes_value: false
+        help: Enable dual rail routing mode.
+    - channel_width:
+        long: channel_width
+        takes_value: true
+        help: Sets the channel width of the architecture.(will be deprecated in favour of config file)
+    - lut_k:
+        short: k
+        long: lut_k
+        takes_value: true
+        help: Size of the lookup tables used.
+
+    # - fpga_delay_pad_exit:
+    #     long: fpga_delay_pad_exit
+    #     takes_value: true
+    #     help: Sets the fpga_delay_pad_exit parameter to use for critical timing calculation.
+    # - fpga_delay_ble_exit:
+    #     long: fpga_delay_ble_exit
+    #     takes_value: true
+    #     help: Sets the fpga_delay_ble_exit parameter to use for critical timing calculation.
+    # - fpga_delay_ble_enter:
+    #     long: fpga_delay_ble_enter
+    #     takes_value: true
+    #     help: Sets the fpga_delay_ble_enter parameter to use for critical timing calculation.
+    # - fpga_delay_pad_enter:
+    #     long: fpga_delay_pad_enter
+    #     takes_value: true
+    #     help: Sets the fpga_delay_pad_enter parameter to use for critical timing calculation.
+    # - fpga_delay_trackswitch:
+    #     long: fpga_delay_trackswitch
+    #     takes_value: true
+    #     help: Sets the fpga_delay_trackswitch parameter to use for critical timing calculation.
+
+        
+        
+        
+        
+        
+
 #subcommands:
 #    - test:
 #        about: controls testing features

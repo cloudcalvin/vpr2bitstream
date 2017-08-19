@@ -487,10 +487,11 @@ pub fn build_bitstream_logic_blocks<'a>(tiles : &'a mut Vec<Vec<Tile>>, models :
           bits_println!(" writing to idx : {:?}",*i);
           tile.set_ble_at(*i);
         }
+
       }else{
         //the point could not be found. This could be because latching to output pad.
         let &Point(x,y) = place.get(&format!("out:{}",&logic.output))
-          .expect(format!("Error generating bitstream: Could not find placement data for {:?}",&logic.output).as_str());        
+          .expect(format!("Error generating bitstream: Could not find placement data for {:?}",&logic.output).as_str());   
         if (*BLIF_DEBUG) | (*BITSTREAM){
           vv_bits_println!("Found output logic block defined in Blif file that could not be found in .place file. ")
         }

@@ -1,0 +1,36 @@
+---
+simulation:
+  name: demo_bitsream_generation
+  top_module: fpga_k3_N1_uniform_adp2
+  test_template: "$ENV{FPGA_SRC}/tb_template_k3_N1_uniform_adp2.v" #used for PAD numbering  
+  parameter_template: "$ENV{FPGA_SRC}/p_template_fpga_tb.v" #used for PAD numbering  
+  output_dir: ./results/demo_flow/dualrail.ble3
+  options: 
+    - "-sv ./*" # what was this meant to do?
+    - "-port_map"
+    - "-dual_rail"
+  arguments: 
+    run_vtr_experiment:
+      - "-latest"
+      - "-vpr_route_chan_width 6"
+    # vpr:
+      # - "-vpr_display" # sit die graphical display aan vir
+    vpr2bitstream:
+      # - "-vv"  
+  circuits:
+    - serial_crc_16_tb:
+      - resources/testbenches/serial_crc_16_tb.v
+      - resources/benchmarks/serial_crc_16.v
+    # - smux_tb:
+    #   - resources/benchmarks/smux.v
+
+  architectures:
+    - resources/K3.xml
+  # parameters: # parameters can be put here or in parameter file
+  environment:
+    # - FPGA_SRC: somewhere
+  parameters: # PARAMETER OVERRIDES. see sim docs
+    # - RUNTIME: 20000 # this does not make much sense as each IP requires diff runtime.
+    - splitter_delay: 3             
+    # - "resources/fpga_k3_N1_uniform_dualrail_adp2.para" 
+...

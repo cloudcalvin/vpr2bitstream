@@ -18,13 +18,13 @@ impl NoDangle for Model {
   fn connect_dangling_input_ports(&mut self) {
     for ref mut lb in &mut self.logic {
       let mut inputs = &mut lb.inputs;
-      if inputs.len() < *K_LUT as usize {
-        info_println!("logic block {:?} has {:?} unconnected input ports: {:?}",&lb.output,*K_LUT-inputs.len() as  u16,&inputs);
+      if inputs.len() < *LUT_K as usize {
+        info_println!("logic block {:?} has {:?} unconnected input ports: {:?}",&lb.output,*LUT_K-inputs.len() as  u16,&inputs);
 
         let first: String = inputs.first().unwrap().clone();
         let mut new_tt: Vec<bool> = Vec::from(lb.truth_table.get(0..(2 as u32).pow(inputs.len() as u32) as usize).unwrap());
 
-        while inputs.len() < *K_LUT as usize {
+        while inputs.len() < *LUT_K as usize {
           info_println!("reusing input : {:#?} for unconnected ports",first);
           let half = Vec::from(lb.truth_table.get(0..(2 as u32).pow(inputs.len() as u32) as usize).unwrap());
           vv_blif_println!("half : {:?}",&half);

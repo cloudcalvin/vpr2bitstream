@@ -3,25 +3,6 @@ authors = ["cloudcalvin <cloudcalvin@me.com>"]
 name = "vpr_extra"
 version = "0.1.0"
 
-[dependencies]
-derive_builder = "0.3.0"
-error-chain = "*"
-lazy_static = "0.2.4"
-mdo = "0.3.0"
-nalgebra = "0.11.2"
-regex = "*"
-yaml-rust = "0.3.5"
-chrono = "0.3"
-
-[dependencies.clap]
-default-features = true
-features = ["yaml", "suggestions", "color"]
-version = "*"
-
-[dependencies.nom]
-features = ["regexp"]
-version = "^2.1"
-
 [[bin]]
 name = "abc2dualrail"
 path = "src/abc2dualrail/main.rs"
@@ -30,3 +11,22 @@ path = "src/abc2dualrail/main.rs"
 name = "vpr2bitstream"
 path = "src/vpr2bitstream/main.rs"
 
+[dependencies]
+ansi_term = "0.9.0"
+chrono = "0.3"
+derive_builder = "0.3.0"
+error-chain = "*"
+lazy_static = "0.2.4"
+mdo = "0.3.0"
+nalgebra = "0.11.2"
+petgraph = "0.4.4"
+regex = "*"
+yaml-rust = "0.3.5"
+
+[dependencies.nom]
+features = ["regexp"]
+version = "^2.1"
+
+[dependencies.clap]
+features = ["yaml"]
+version = "2.24.2"

@@ -6,14 +6,21 @@ pub use vpr_extra::errors::*;
 pub use vpr_extra::types::*;
 pub use vpr_extra::parse::*;
 pub use vpr_extra::global::*;
-pub use vpr_extra::output::*;
 
 mod model;
+mod input;
+mod output;
+
 use model::*;
 use model::NoDangle;
+use input::*;
+use output::*;
 
-mod load;
-use load::*;
+use std::path::Path;
+use std::cell::RefCell;
+use std::thread;
+use std::sync::{Mutex,MutexGuard};
+
 #[macro_use]
 pub extern crate lazy_static;
 #[macro_use]
@@ -26,10 +33,8 @@ use yaml_rust::yaml::Yaml;
 
 use clap::{App,ArgMatches};
 use clap::YamlLoader;
-use std::path::Path;
-use std::cell::RefCell;
-use std::thread;
-use std::sync::{Mutex,MutexGuard};
+
+
 
 
 // IMPORTANT THAT CONFIG VALUES ARE SET BEFORE USE, OR THE VALUE OF THE CONST WIL BE FIXED TO THE DEFAULT.
@@ -45,8 +50,33 @@ fn main() {
   /////////////////////////////////////////////////////////////////////////////////////////////////
   // Program Initialisation
   /////////////////////////////////////////////////////////////////////////////////////////////////
-  init(&*YAML,load_inputs);
+  // Global Config Initialisation
+  setup_global_context(&*YAML);
+  
+  // Set logging levels.
+  init_logging(); 
 
+  // Store input files globally.
+  set_input_files(); 
+
+
+  // (issue that cuased this to move here ): 
+  // the blif file parsing requires the knowledge of the size of the LUT. This might be avoided if a scan 
+  // is done during parsing to determine the lut size. it might differ from the requisted size, and should then be 
+  // translated to the requisted size AFTER it has been parsed.
+  /////////////////////////////////////////////////////////////////////////////////////////////////
+  // Problem Setup Initialisation 
+  /////////////////////////////////////////////////////////////////////////////////////////////////
+  thread::spawn(move || {
+    let mut config: MutexGuard<Config> = GL_CONFIG.lock().unwrap();
+    let matches = (*MATCHES).clone();
+
+    if let Ok(lut_k) = value_t!(matches, "lut_k", u16){
+      config.lut_k = lut_k;
+    }else{
+      config.lut_k = 3; //set these from user config file
+    }
+  }).join().expect("thread::spawn failed");
 
   /////////////////////////////////////////////////////////////////////////////////////////////////
   //Load the blif file into the block matrix
@@ -56,49 +86,15 @@ fn main() {
     Err(e) => panic!("Could not load blif file : {}", e.to_string())
   };
 
+  /////////////////////////////////////////////////////////////////////////////////////////////////
+  // Problem Setup Finalisation
+  /////////////////////////////////////////////////////////////////////////////////////////////////
 
-  match (*MATCHES).occurrences_of("verbose") {
-    2 => {
-      println!("BLIF FILE DATA: ");
-      for b in &blif {
-        println!("{:#?}",b);
-      }
-    },
-    _ => println!("No verbose info")
-  }
 
-  // If we specified the multiple() setting we can get all the values
-  if let Some(in_debug) = (*MATCHES).values_of("debug") {
-    for debug_option in in_debug {
-      println!("Debug option enabled : {}", debug_option);
-      match debug_option{
-        "c" | "config" => {
-          println!("TODO : CONFIG FILE DATA: ");
-        },
-        "b" | "blif" => {
-          println!("BLIF FILE DATA: ");
-          thread::spawn(move || {
-            GL_CONFIG.lock().unwrap().loglevel_blif = true;
-          }).join().expect("thread::spawn failed");
-//          for b in &blif {
-//            println!("{:#?}",b);
-//          }
-        },
-
-        _ => break
-
-      }
-    }
-  }
-
-  //Problem Initialisation
-  thread::spawn(move || {
-    let mut config: MutexGuard<Config> = GL_CONFIG.lock().unwrap();
-    config.k_lut = 3; //set these from user config file
-  }).join().expect("thread::spawn failed");
-
+  /////////////////////////////////////////////////////////////////////////////////////////////////
+  // Problem Solve
+  /////////////////////////////////////////////////////////////////////////////////////////////////
   info_println!("Bitstream generation start");
-
   
   let blif_out = match (*MATCHES).value_of("output") {
     Some(blif) => blif.to_owned(), //test if it exists.

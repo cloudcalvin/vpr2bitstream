@@ -1,5 +1,6 @@
 #[macro_use]
 use global::*;
+// use errors::*;
 
 use std::sync::Mutex;
 use std::cell::RefCell;
@@ -58,7 +59,7 @@ use types::XY::*;
 #[derive(Default,Clone,Debug,PartialEq)]
 pub struct Port(u16);
 
-#[derive(Default,Clone,Debug,PartialEq)]
+#[derive(Default,Clone,Debug,PartialEq,Eq,Hash)]
 pub struct Point(pub u16,pub u16);
 
 
@@ -67,6 +68,7 @@ pub type ClassOrPad = MetaNumber;
 pub type PinOrPad = MetaNumber;
 //pub type Track = u32;
 pub type Placement = HashMap<String, Point>;
+pub type PlacementMap = HashMap<Point, String>;
 
 
 #[derive(Debug)]
@@ -125,6 +127,21 @@ pub struct Track{
   //  pub track : u32,
 }
 
+// list of finite events that a routing 
+pub enum RoutingEvent{
+  SwitchblockEntry,
+  SwitchblockPassThrough, //extended/multilayer connection
+  // CLBEntry,
+  // CLBExit,
+  // PadEntry,
+  // PadExit
+  SyncBlockEntry,
+  SyncBlockExit,
+  ConnectionBlockEntry,
+  ConnectionBlockExit,
+  ASyncBlockEntry,
+  ASyncBlockExit,
+}
 
 #[derive(Debug)]
 pub struct Route{
@@ -138,24 +155,42 @@ pub struct Route{
 
 pub type RouteTree = Vec<Route>;
 
-#[derive(Debug)]
-pub enum Net{
-  Global(NetGlobal),
-  Local(NetLocal)
+//TODO you should chage this so that when parsing two list are created.
+// #[derive(Debug)]
+// pub enum Net{
+//   Global(NetGlobal),
+//   Local(NetLocal)
+// }
+
+pub trait Net{
+  // pub fn get_name() -> String;
+  // pub fn get_src() -> Source;
+  // pub fn get_route_tree() -> RouteTree;
 }
 
-//pub trait Net{}
 #[derive(Debug)]
-pub struct NetLocal{
+pub struct RouteNet{
   pub name : String,
   pub src: Source,
-//  pub net_type: NetType,
   pub route_tree : RouteTree, //each outer vec is a new sub source. each inner vec is a connection.
 }
-//impl Net for NetLocal{}
 #[derive(Debug)]
-pub struct NetGlobal;
-//impl Net for NetGlobal{}
+pub struct GlobalNet;
+impl Net for RouteNet{} 
+impl Net for GlobalNet{}
+
+//pub trait Net{}
+// #[derive(Debug)]
+// pub struct NetLocal{
+//   pub name : String,
+//   pub src: Source,
+// //  pub net_type: NetType,
+//   pub route_tree : RouteTree, //each outer vec is a new sub source. each inner vec is a connection.
+// }
+// //impl Net for NetLocal{}
+// #[derive(Debug)]
+// pub struct NetGlobal;
+// //impl Net for NetGlobal{}
 
 #[derive(Debug,PartialEq)]
 pub enum XY {
@@ -202,7 +237,7 @@ impl LogicBlock{
     }
     blif.push_str(&format!("{}{}",self.output,"\n"));
     for i in &self.truth_idxs{
-      let n = &format!("{:01$b}", i,*K_LUT as usize);
+      let n = &format!("{:01$b}", i,*LUT_K as usize);
       blif.push_str(&format!("{}{}",n," 1\n"));
     }
     blif
@@ -221,7 +256,7 @@ pub struct Model{
   pub name: String,
   pub inputs : Vec<String>,
   pub outputs : Vec<String>,
-  pub latched : Vec<String>,
+  pub latched : Vec<(String,String,String,String,String)>,
   pub logic : Vec<LogicBlock>,
 }
 
@@ -339,7 +374,10 @@ pub struct Tile{
   pub ble : Vec<bool>,            // 2'b11   8'b0000_0000
 }
 
+
 impl Tile{ //todo : move tile impl away from the other types. Make this file declarative-only.. (maybe put this in the bitstream.rs?)
+
+  // this bitstream function should go in the bitstream.rs file  
   pub fn bitstream(&self) -> Vec<bool> {
     let mut ret = Vec::new();
     ret.extend_from_slice(&self.ble);
@@ -409,9 +447,9 @@ impl Tile{ //todo : move tile impl away from the other types. Make this file dec
 //    self.ble = value; //first need to convert the value to true's.
 //  }
   pub fn set_top_con_blk_at(&mut self, index: usize){
-    match *N_RAIL {
-      1 => self.con_blk_top[index as usize] = true,
-      2 => {
+    match *DUALRAIL_MODE {
+      false => self.con_blk_top[index as usize] = true,
+      true => {
         self.con_blk_top[index*2usize as usize] = true;
         self.con_blk_top[(index*2usize)+1usize as usize] = true;
       },
@@ -420,9 +458,9 @@ impl Tile{ //todo : move tile impl away from the other types. Make this file dec
 
   }
   pub fn set_right_con_blk_at(&mut self, index: usize){
-    match *N_RAIL {
-      1 => self.con_blk_right[index as usize] = true,
-      2 => {
+    match *DUALRAIL_MODE {
+      false => self.con_blk_right[index as usize] = true,
+      true => {
         self.con_blk_right[index*2usize as usize] = true;
         self.con_blk_right[(index*2usize)+1usize as usize] = true;
       },
@@ -598,17 +636,17 @@ impl SwitchBlock for WiltonSwitchBlockBitstream{
 
     let output_side = out_port/(*N_TRACKS) as u16; // should be rounded down(test that it does). side 0 is the rhs, and increases clockwise.
     let input_side = in_port/(*N_TRACKS) as u16; // should be rounded down(test that it does). side 0 is the rhs, and increases clockwise.
-    debug_println!("in_port : {}",&in_port);
-    debug_println!("out_port : {}",&out_port);
-    debug_println!("input side : {}",input_side);
-    debug_println!("output side : {}",output_side);
+    vv_route_println!("in_port : {}",&in_port);
+    vv_route_println!("out_port : {}",&out_port);
+    vv_route_println!("input side : {}",input_side);
+    vv_route_println!("output side : {}",output_side);
     //    let input_side = in_port/(*N_TRACKS) as u16;
     let bit =  if in_port > out_port{
       (input_side-output_side)-1
     }else{
       3-(output_side-input_side)
     };
-    debug_println!("bit to write : {}",bit);
+    vv_route_println!("bit to write : {}",bit);
     // based on input track and output size, determine switch.
     let input_index = in_port / 2 as u16; //must round down..
     let bit_idx =  input_index*3 + bit;
@@ -618,3 +656,51 @@ impl SwitchBlock for WiltonSwitchBlockBitstream{
 }
 
 
+
+pub type NetName = String;
+pub type ModelName = String;
+pub type Delay = u32;
+pub type RouteDelay = u32;
+pub type LongestRouteDelay = u32;
+
+// TODO : events should be structs that impl event traits and contain the required event details in them.
+// pub enum RouteEventEnum{
+//   AsyncSourceEvent(AsyncSourceEvent),
+//   AsyncSinkEvent(AsyncSinkEvent),
+//   SyncSourceEvent(SyncSourceEvent),
+//   SyncSinkEvent(SyncSinkEvent),
+//   TrackSwitchEvent(TrackSwitchEvent),
+// }
+
+#[derive(Clone,Debug,PartialEq,Eq)]
+pub enum RouteEventEnum{
+  AsyncSourceEvent(RouteEvent),
+  AsyncSinkEvent(RouteEvent),
+  SyncSourceEvent(RouteEvent),
+  SyncSinkEvent(RouteEvent),
+  TrackSwitchEvent(RouteEvent),
+  TrackEntryEvent(RouteEvent),
+}
+impl RouteEventEnum{
+  pub fn point(&self) -> Point {
+    use self::RouteEventEnum::*;
+    match self {
+      &AsyncSourceEvent(ref re) => re.point.clone(),
+      &AsyncSinkEvent(ref re) => re.point.clone(),
+      &SyncSourceEvent(ref re) => re.point.clone(),
+      &SyncSinkEvent(ref re) => re.point.clone(),
+      &TrackSwitchEvent(ref re) => re.point.clone(),
+      &TrackEntryEvent(ref re) => re.point.clone(),
+    }
+  }
+}
+#[derive(Clone,Debug,PartialEq,Eq)]
+pub struct RouteEvent{
+  pub point : Point,
+  // delay : Delay,
+}
+
+pub trait RouteNode{}
+
+impl RouteNode for Sink{}
+impl RouteNode for Source{}

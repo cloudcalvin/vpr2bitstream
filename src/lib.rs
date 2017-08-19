@@ -4,13 +4,14 @@
 ///
 ///
 #[macro_use]
-pub mod macros; //must be listed before other modules
+pub mod logging; //must be listed before other modules
 pub mod global;
 pub mod errors;
 pub mod types;
 pub mod parse;
 pub mod bitstream;
-pub mod output;
+pub mod parameter;
+pub mod timing;
 
 #[macro_use]
 pub extern crate error_chain;
@@ -18,6 +19,9 @@ pub extern crate error_chain;
 pub extern crate clap;
 #[macro_use]
 pub extern crate yaml_rust;
+
+#[macro_use]
+pub extern crate ansi_term;
 
 #[macro_use]
 pub extern crate nom;

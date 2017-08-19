@@ -51,7 +51,11 @@ args:
         value_name: FILE
         takes_value: true
         help: Sets the .route file to use
-#
+    - lut_k:
+        short: k
+        long: lut_k
+        takes_value: true
+        help: Size of the lookup tables used.
 #subcommands:
 #    - test:
 #        about: controls testing features
