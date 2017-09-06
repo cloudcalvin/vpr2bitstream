@@ -19,14 +19,22 @@
   <!-- ODIN II specific config ends -->
 
   <!-- Physical descriptions begin -->
-  <layout  auto="1.0"/>
+  <!-- <layout  auto="1.0"/> -->
+    <layout>
+    <auto_layout aspect_ratio="1.0">
+        <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
+        <perimeter type="io" priority="100"/>
+        <corners type="EMPTY" priority="101"/>
+        <!--Fill with 'clb'-->
+        <fill type="clb" priority="10"/>
+        </auto_layout>
+  </layout>
   <!--<layout width="10" height="10"/>-->
   <device>
     <sizing R_minW_nmos="4220.930176" R_minW_pmos="11207.599609" ipin_mux_trans_size="0.983352"/>
     <timing C_ipin_cblock="0.000000e+00" T_ipin_cblock="8.045000e-11"/>
     <area grid_logic_tile_area="2229.320068"/>
     <chan_width_distr>
-      <io width="1.000000"/>
       <x distr="uniform"  peak="1.000000"/>
       <y distr="uniform"  peak="1.000000"/>
     </chan_width_distr>
@@ -157,9 +165,9 @@
       </pinlocations>
 
       <!-- Place I/Os on the sides of the FPGA -->
-      <gridlocations>
+      <!-- <gridlocations>
         <loc type="perimeter" priority="10"/>
-      </gridlocations>
+      </gridlocations> -->
 
       <power method="ignore"/>
 
@@ -273,10 +281,10 @@
       </pinlocations>
 
       <!-- Place this general purpose logic block in any unspecified column -->
-      <gridlocations>
-        <loc type="fill" priority="1"/>
+      <!-- <gridlocations> -->
+        <!-- <loc type="fill" p/riority="1"/> -->
         <!--<loc type="rel" pos="float" priority="int"/>-->
-      </gridlocations>
+      <!-- </gridlocations> -->
     </pb_type>
     <!-- Define general purpose logic block (CLB) ends -->
 
