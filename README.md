@@ -1,4 +1,6 @@
+# VPR2Bitstream
 
+## Notes
 settings (coordinate system (vpr-style == cartesian))
 read file (``` .place ```)
   place file consists of:
